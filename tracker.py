@@ -484,6 +484,9 @@ def render_page(weeks, standings, total):
         weeks, standings, video_config
     )
     overdue_teams = {team for team, _ in missing_videos}
+    special_videos = defaultdict(list)
+    for item in video_config.get("special", []):
+        special_videos[item["team"], int(item["week"])].append(item["player"])
     table_rows = []
     for rank, team, count, weekly in standings:
         row_classes = []
@@ -498,7 +501,8 @@ def render_page(weeks, standings, total):
             f'<td class="score">{count}</td>',
         ]
         for week, players in zip(weeks, weekly):
-            if players:
+            bonus_players = sorted(special_videos.get((team, week), []), key=str.casefold)
+            if players or bonus_players:
                 player_items = []
                 for name in players:
                     if (team, name) in missing_videos:
@@ -520,8 +524,25 @@ def render_page(weeks, standings, total):
                         player_items.append(
                             f'<li data-player="{escape(name, quote=True)}">{escape(name)}</li>'
                         )
+                for name in bonus_players:
+                    target = video_targets.get((week, team, name))
+                    if target:
+                        player_items.append(
+                            f'<li data-player="{escape(name, quote=True)}" class="video-bonus" '
+                            'title="Voluntary video — no donut required">'
+                            f'<button class="player-video-button" type="button" '
+                            f'data-video-target="{escape(target, quote=True)}" '
+                            f'aria-label="Open the voluntary Week {week} video for {escape(name, quote=True)}">'
+                            f'{escape(name)}</button></li>'
+                        )
+                    else:
+                        player_items.append(
+                            f'<li data-player="{escape(name, quote=True)}" class="video-bonus">'
+                            f'{escape(name)}</li>'
+                        )
                 names = "".join(player_items)
-                cells.append(f'<td class="has-donut"><ul>{names}</ul></td>')
+                cell_class = "has-donut" if players else "has-video-bonus"
+                cells.append(f'<td class="{cell_class}"><ul>{names}</ul></td>')
             else:
                 cells.append('<td class="no-donut">—</td>')
         table_rows.append(f"<tr{row_class}>" + "".join(cells) + "</tr>")

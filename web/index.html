@@ -191,10 +191,13 @@
     .score { color: var(--accent); font-weight: 800; }
     .no-donut { text-align: center; color: var(--muted); }
     .has-donut { background: #352638; }
-    .has-donut ul { list-style: none; margin: 0; padding: 0; }
-    .has-donut li + li { margin-top: .35rem; padding-top: .35rem; border-top: 1px solid var(--line); }
+    .has-video-bonus { background: #183127; }
+    .has-donut ul, .has-video-bonus ul { list-style: none; margin: 0; padding: 0; }
+    .has-donut li + li, .has-video-bonus li + li { margin-top: .35rem; padding-top: .35rem; border-top: 1px solid var(--line); }
     .player-video-button { display: inline; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; text-decoration: underline; text-decoration-color: #9b6e94; text-underline-offset: .2rem; cursor: pointer; }
     .player-video-button:hover, .player-video-button:focus-visible { color: var(--accent); text-decoration-color: currentColor; }
+    .video-bonus, .video-bonus .player-video-button, .video-special-card summary strong { color: #6ee7a0; }
+    .video-bonus .player-video-button { text-decoration-color: #3d8c62; }
     .video-overdue .team-name, .video-missing { color: var(--danger); }
     #videos { margin-top: 2.4rem; padding-top: 1.6rem; border-top: 1px solid var(--line); }
     .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -381,7 +384,7 @@
 <tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">LEASTIMNOTDRINKINGBRIAN</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Will Reichard"><button class="player-video-button" type="button" data-video-target="video-8-leastimnotdrinkingbrian-will-reichard" aria-label="Open the Week 8 video for Will Reichard">Will Reichard</button></li></ul></td></tr>
 <tr class="video-overdue"><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">Quinshon Judkins Fan Club</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Kenyon Sadiq" class="video-missing" title="Video missing">Kenyon Sadiq</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
 <tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">The Tetless Offensive</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Brian Thomas Jr."><button class="player-video-button" type="button" data-video-target="video-5-the-tetless-offensive-brian-thomas-jr" aria-label="Open the Week 5 video for Brian Thomas Jr.">Brian Thomas Jr.</button></li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 11">11</span> <span class="team-name">Love Air Jordyn</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 11">11</span> <span class="team-name">Love Air Jordyn</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-video-bonus"><ul><li data-player="Evan McPherson" class="video-bonus" title="Voluntary video — no donut required"><button class="player-video-button" type="button" data-video-target="video-6-love-air-jordyn-evan-mcpherson" aria-label="Open the voluntary Week 6 video for Evan McPherson">Evan McPherson</button></li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
 <tr><th scope="row"><span class="rank" aria-label="Rank 11">11</span> <span class="team-name">Steve</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr></tbody>
           </table>
         </div>
@@ -452,6 +455,7 @@
           Array.from(cell.querySelectorAll("li"), player => ({
             name: player.dataset.player || player.textContent,
             missing: player.classList.contains("video-missing"),
+            bonus: player.classList.contains("video-bonus"),
             target: player.querySelector("[data-video-target]")?.dataset.videoTarget || "",
           }))
         ),
@@ -501,6 +505,7 @@
               name.dataset.videoTarget = player.target;
               name.setAttribute("aria-label", "Open the video for " + player.name);
             }
+            if (player.bonus) name.classList.add("video-bonus");
             if (player.missing) name.className = "video-missing";
             if (!players.length) name.className = "empty-week";
             card.append(name);
@@ -528,7 +533,10 @@
               players: team.weeks[week],
               missing: team.weeks[week].some(player => player.missing),
             }));
-          const count = cards.reduce((total, card) => total + card.players.length, 0);
+          const count = cards.reduce(
+            (total, card) => total + card.players.filter(player => !player.bonus).length,
+            0
+          );
           showResults(cards, weeks[week] + " · " + countLabel(count));
         } else if (mode === "team") {
           const team = teams[teamSelect.selectedIndex];
