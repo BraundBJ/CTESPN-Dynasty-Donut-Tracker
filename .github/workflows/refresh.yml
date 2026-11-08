@@ -8,6 +8,7 @@ on:
     paths:
       - 'tracker.py'
       - 'reviews.json'
+      - 'leaderboard.html.template'
       - 'web/index.html'
       - '.github/workflows/refresh.yml'
 
@@ -28,15 +29,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Check completed weeks
-        run: python3 tracker.py --site "$RUNNER_TEMP/donut-site"
+        run: python3 tracker.py --site web
       - name: Save changes
         run: |
-          if git diff --quiet -- README.md; then
+          if git diff --quiet -- README.md web/index.html; then
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md
+          git add README.md web/index.html
           git commit -m "Refresh zero-point starter leaderboard"
           git push
       - name: Check GitHub Pages source
@@ -44,17 +45,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if source=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type'); then
-            if [ "$source" = workflow ]; then
-              echo 'publish=true' >> "$GITHUB_OUTPUT"
-            fi
-          else
-            echo "::notice::Enable GitHub Actions as the Pages source to publish the site."
-          fi
+          response="$RUNNER_TEMP/pages-settings.json"
+          status=$(curl --silent --show-error --retry 2 --max-time 15 \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --output "$response" --write-out '%{http_code}' \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages")
+          case "$status" in
+            200)
+              if [ "$(jq -r .build_type "$response")" = workflow ]; then
+                echo 'publish=true' >> "$GITHUB_OUTPUT"
+              else
+                echo "::notice::Set the Pages source to GitHub Actions to enable publishing."
+              fi
+              ;;
+            404) echo "::notice::Enable GitHub Actions as the Pages source to publish the site." ;;
+            *) echo "::error::GitHub Pages settings check returned HTTP $status."; exit 1 ;;
+          esac
       - uses: actions/upload-pages-artifact@v4
         if: steps.pages.outputs.publish == 'true'
         with:
-          path: ${{ runner.temp }}/donut-site
+          path: web
 
   publish:
     needs: refresh

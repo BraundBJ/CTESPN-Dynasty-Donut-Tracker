@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Track confirmed zero-point starts across the CTESPN Dynasty fantasy football league.">
+  <meta name="theme-color" content="#201b26">
+  <title>CTESPN Dynasty Donut Tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #201b26;
+      --muted: #625965;
+      --canvas: #fcf6ed;
+      --surface: #fffdf9;
+      --line: #eadfd2;
+      --pink: #ffadbc;
+      --accent: #9a284b;
+      font: 16px/1.55 system-ui, sans-serif;
+      background: var(--canvas);
+      color: var(--ink);
+    }
+    * { box-sizing: border-box; }
+    body, h1, h2, h3, p { margin: 0; }
+    a { color: var(--accent); text-underline-offset: .22em; }
+    :focus-visible { outline: 2px solid currentColor; outline-offset: .25rem; }
+    .wrap { width: min(69rem, calc(100% - 2.5rem)); margin-inline: auto; }
+    header { color: var(--canvas); background: var(--ink); border-bottom: 4px solid var(--pink); }
+    .topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .65rem 1.5rem; padding: 1rem 0; border-bottom: 1px solid #49404d; }
+    .brand { color: var(--pink); }
+    nav { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; font-size: .9rem; }
+    nav a { color: inherit; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    .hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 3rem 0 3.4rem; }
+    .kicker { font: 700 .78rem/1.4 ui-monospace, monospace; letter-spacing: .085em; text-transform: uppercase; }
+    .hero .kicker { color: var(--pink); }
+    h1 { font-size: clamp(2.75rem, 8vw, 5.75rem); line-height: .98; letter-spacing: -.065em; margin: .6rem 0 .85rem; }
+    .intro { max-width: 33rem; color: #eee0e5; }
+    .donut { flex: 0 0 auto; width: clamp(5rem, 21vw, 12rem); height: auto; transform: rotate(-12deg); }
+    main { padding: 1.75rem 0 3rem; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-bottom: 2rem; }
+    .metrics > div, .panel { background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; }
+    .metrics > div { padding: .7rem .95rem .85rem; }
+    .metrics strong { display: block; color: var(--accent); font-size: 2rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+    .metrics span, .quiet { color: var(--muted); font-size: .88rem; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); gap: 1.2rem; align-items: start; }
+    .section-heading { margin: 0 0 .8rem; }
+    h2 { font-size: 1.55rem; letter-spacing: -.03em; line-height: 1.15; }
+    h3 { font-size: 1rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td { padding: .65rem .7rem; border-bottom: 1px solid var(--line); text-align: left; }
+    thead { background: #f9e9e2; }
+    thead th { font-size: .8rem; }
+    th:nth-child(1), th:nth-child(n+3), td { text-align: center; font-variant-numeric: tabular-nums; }
+    tbody td { color: var(--muted); }
+    tbody th { overflow-wrap: anywhere; }
+    tbody .leader { background: #fff1f1; }
+    tbody tr:last-child > * { border-bottom: 0; }
+    .score { color: var(--accent); font-weight: 800; }
+    details { border-bottom: 1px solid var(--line); }
+    details:last-child { border-bottom: 0; }
+    summary { cursor: pointer; padding: .68rem .85rem; }
+    summary span { margin-left: .6rem; color: var(--muted); font-size: .8rem; }
+    details[open] summary { background: #f9e9e2; }
+    .weekly { overflow: hidden; }
+    .plays { list-style: none; margin: 0; padding: .05rem .85rem; }
+    .plays li { padding: .62rem 0; }
+    .plays li + li { border-top: 1px solid var(--line); }
+    .plays span { display: block; color: var(--muted); font-size: .82rem; }
+    .plays p, .empty { font-size: .88rem; }
+    .empty { padding: .72rem .85rem; }
+    .reviews { margin-top: 2.15rem; }
+    .reviews h3 { padding: .7rem .85rem 0; }
+    .reviews .panel > details { margin-top: .4rem; border-top: 1px solid var(--line); }
+    footer { border-top: 1px solid var(--line); padding: 1.15rem 0 2rem; }
+    footer a { margin-right: .65rem; }
+    @media (max-width: 48rem) { .grid { grid-template-columns: 1fr; gap: 1.55rem; } }
+    @media (max-width: 28rem) {
+      .wrap { width: calc(100% - 1.5rem); }
+      .hero { gap: .45rem; padding-block: 2.25rem; }
+      .metrics { gap: .4rem; }
+      .metrics > div { padding: .55rem; }
+      th, td { padding: .58rem .4rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="topbar">
+        <strong class="brand">CTESPN Dynasty</strong>
+        <nav aria-label="Leaderboard sections">
+          <a href="#leaderboard">Leaderboard</a>
+          <a href="#weekly-log">Weekly log</a>
+          <a href="#review">To verify</a>
+        </nav>
+      </div>
+      <div class="hero">
+        <div>
+          <p class="kicker">$season season · $coverage</p>
+          <h1>Donut Tracker</h1>
+          <p class="intro">A donut goes to a fantasy starter who scored 0.00 points and played in the third or fourth quarter.</p>
+        </div>
+        <svg class="donut" viewBox="0 0 160 160" aria-hidden="true">
+          <circle cx="80" cy="80" r="51" fill="none" stroke="#d58d54" stroke-width="42"/>
+          <circle cx="80" cy="75" r="49" fill="none" stroke="#ffadbc" stroke-width="36"/>
+          <path d="M43 42l9 4m24-20 4 10m28 0-6 8m26 9 8-3m-7 33 10 4m-20 25 7 6m-37 0 2 10m-29-13-8 5m-15-23-9-2m3-24-10-4" stroke="#752646" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="metrics" aria-label="Season totals">
+      <div><strong>$total</strong><span>Confirmed donuts</span></div>
+      <div><strong>$pending</strong><span>To verify</span></div>
+      <div><strong>$teams</strong><span>Fantasy teams</span></div>
+    </section>
+    <div class="grid">
+      <section id="leaderboard" aria-labelledby="leaderboard-title">
+        <h2 class="section-heading" id="leaderboard-title">Leaderboard</h2>
+        <div class="panel table-wrap">
+          <table aria-label="Fantasy team donut rankings">
+            <thead><tr><th scope="col">Rank</th><th scope="col">Fantasy team</th><th scope="col">Donuts</th><th scope="col">To verify</th></tr></thead>
+            <tbody>$leaderboard</tbody>
+          </table>
+        </div>
+      </section>
+      <section id="weekly-log" aria-labelledby="weekly-title">
+        <h2 class="section-heading" id="weekly-title">Weekly log</h2>
+        <div class="panel weekly">$weekly</div>
+      </section>
+    </div>
+    <section class="reviews" id="review" aria-labelledby="review-title">
+      <h2 class="section-heading" id="review-title">Cases to verify</h2>
+      <div class="panel">
+        <h3>Waiting for second-half evidence</h3>
+        $uncertain
+        <details><summary><strong>Reviewed exclusions</strong></summary>$excluded</details>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap quiet">
+    <p>Rankings count confirmed starts. Special-teams plays count. Overtime and team D/ST slots are excluded.</p>
+    <p><a href="https://github.com/BraundBJ/CTESPN-Dynasty-Donut-Tracker">Full methodology and source code</a><a href="https://docs.sleeper.com/">Sleeper</a><a href="https://nflreadr.nflverse.com/">nflverse</a></p>
+  </footer>
+</body>
+</html>

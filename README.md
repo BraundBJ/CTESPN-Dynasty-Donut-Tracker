@@ -82,6 +82,6 @@ Each entry is one individual starter with exactly 0.00 points in both Sleeper sc
 
 Confirmation comes from an identified play, on-field charting when available, or a snap total that exceeds the maximum possible outside Q3–Q4. A full-game snap count alone can leave a case open. Sourced manual decisions are in `reviews.json`, keyed by week and Sleeper player ID.
 
-GitHub Actions checks daily for completed weeks and stat corrections. Run **Refresh leaderboard** from the Actions tab to refresh on demand, or run `python3 tracker.py` locally with Python 3.9 or later.
+GitHub Actions checks daily for completed weeks and stat corrections. Run **Refresh leaderboard** from the Actions tab to refresh on demand. For a local copy of the website, run `python3 tracker.py --site web` with Python 3.9 or later and open `web/index.html` in your browser.
 
 Sources: [Sleeper](https://docs.sleeper.com/), [nflverse play-by-play](https://nflreadr.nflverse.com/reference/load_pbp.html), [Pro Football Reference snap counts via nflverse](https://nflreadr.nflverse.com/reference/load_snap_counts.html), and [FTN Data on-field charting via nflverse](https://nflreadr.nflverse.com/reference/load_participation.html) ([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)).
