@@ -217,18 +217,21 @@ def audit(snapshot):
         for row in rows:
             roster_id = row["roster_id"]
             seen = set()
+            player_points = row.get("players_points") or {}
             starters, points_by_slot = row["starters"], row["starters_points"]
             if len(starters) != len(points_by_slot):
                 raise ValueError(f"Starter scores are missing for roster {roster_id} in Week {week}")
             for player_id, points in zip(starters, points_by_slot):
                 if player_id in (None, "", "0") or player_id in seen or points != 0:
                     continue
+                # Require a matching player score. A zero attached to the
+                # lineup slot alone does not establish who earned it.
+                if player_points.get(player_id) != 0:
+                    continue
                 seen.add(player_id)
                 player = players.get(player_id, {})
                 name = player.get("full_name") or player.get("last_name") or f"Player {player_id}"
-                if (row.get("players_points") or {}).get(player_id) == 0 and counts_as_donut(
-                    week, player_id, player, appearances, early_injuries, snapshot
-                ):
+                if counts_as_donut(week, player_id, player, appearances, early_injuries, snapshot):
                     entries.append((week, roster_id, name))
     return teams, matchups, entries
 
