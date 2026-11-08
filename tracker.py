@@ -271,6 +271,22 @@ def audit(snapshot):
                 name = player.get("full_name") or player.get("last_name") or f"Player {player_id}"
                 if counts_as_donut(week, player_id, player, appearances, early_injuries, bye_players, snapshot):
                     entries.append((week, roster_id, name))
+    manual_path = ROOT / "manual_entries.json"
+    if manual_path.exists():
+        manual = json.loads(manual_path.read_text(encoding="utf-8"))
+        removals = {
+            (int(item["week"]), int(item["roster_id"]), item["player"])
+            for item in manual.get("remove", [])
+        }
+        entries = [entry for entry in entries if entry not in removals]
+        existing = set(entries)
+        for item in manual.get("add", []):
+            entry = (int(item["week"]), int(item["roster_id"]), item["player"])
+            if entry[0] not in matchups or entry[1] not in teams:
+                raise ValueError(f"Invalid manual donut entry: {entry}")
+            if entry not in existing:
+                entries.append(entry)
+                existing.add(entry)
     return teams, matchups, entries
 
 
@@ -359,7 +375,10 @@ def load_video_submissions():
 
 def render_video_log(weeks, standings, config):
     missing = {(item["team"], item["player"]) for item in config.get("missing", [])}
-    links = {(item["team"], item["player"]): item["url"] for item in config.get("links", [])}
+    links = {
+        (item["team"], item["player"], item.get("week")): item["url"]
+        for item in config.get("links", [])
+    }
     collection = config.get("collection_url", "")
     entries = []
     for _, team, _, weekly in standings:
@@ -368,7 +387,7 @@ def render_video_log(weeks, standings, config):
                 entries.append((week, team, player, (team, player) in missing, False))
     for item in config.get("special", []):
         entries.append((item["week"], item["team"], item["player"], False, True))
-        links[item["team"], item["player"]] = item["url"]
+        links[item["team"], item["player"], item["week"]] = item["url"]
 
     cards = []
     for week, team, player, is_missing, is_special in sorted(
@@ -381,17 +400,38 @@ def render_video_log(weeks, standings, config):
             classes.append("video-special-card")
         if is_missing:
             action = '<span class="video-status video-status-missing">Missing</span>'
+            media = ""
+            rating = ""
         else:
-            url = links.get((team, player), collection)
-            action = (
-                f'<a class="video-status" href="{html.escape(url, quote=True)}" '
-                'target="_blank" rel="noopener">Watch</a>'
-            ) if url else '<span class="video-status">Submitted</span>'
+            url = links.get((team, player, week), links.get((team, player, None), collection))
+            if url.startswith("videos/"):
+                action = '<span class="video-status">Submitted</span>'
+                media = (
+                    f'<video class="donut-video" controls playsinline preload="metadata" '
+                    f'src="{html.escape(url, quote=True)}"></video>'
+                )
+            elif url:
+                action = f'<a class="video-status" href="{html.escape(url, quote=True)}">Videos</a>'
+                media = ""
+            else:
+                action = '<span class="video-status">Submitted</span>'
+                media = ""
+            rating_key = f"{week}|{team}|{player}"
+            rating = (
+                f'<label class="star-rating" data-rating-key="{html.escape(rating_key, quote=True)}" '
+                f'data-player="{html.escape(player, quote=True)}" data-team="{html.escape(team, quote=True)}">'
+                '<span class="star-control">'
+                '<span class="star-base" aria-hidden="true">★★★★★</span>'
+                '<span class="star-fill" aria-hidden="true">★★★★★</span>'
+                f'<input type="range" min="0" max="5" step="0.5" value="0" '
+                f'aria-label="Rate {html.escape(player, quote=True)} from 0 to 5 stars">'
+                '</span><output>Not rated</output></label>'
+            )
         cards.append(
             f'<li class="{" ".join(classes)}">'
             f'<span class="video-week">Week {week}</span>'
             f'<strong>{html.escape(player)}</strong>'
-            f'<span class="video-team">{html.escape(team)}</span>{action}</li>'
+            f'<span class="video-team">{html.escape(team)}</span>{action}{media}{rating}</li>'
         )
 
     missing_count = sum(is_missing for _, _, _, is_missing, _ in entries)
@@ -402,15 +442,21 @@ def render_video_log(weeks, standings, config):
     )
     collection_link = (
         f'<a class="collection-link" href="{html.escape(collection, quote=True)}" '
-        'target="_blank" rel="noopener">All videos</a>'
+        '>All videos</a>'
     ) if collection else ""
-    return metrics, "".join(cards), collection_link, missing
+    gallery = "".join(
+        f'<li><strong>{html.escape(item["label"])}</strong>'
+        f'<video controls playsinline preload="metadata" '
+        f'src="{html.escape(item["url"], quote=True)}"></video></li>'
+        for item in config.get("gallery", [])
+    )
+    return metrics, "".join(cards), collection_link, gallery, missing
 
 
 def render_page(weeks, standings, total):
     escape = html.escape
     video_config = load_video_submissions()
-    video_metrics, video_log, video_collection, missing_videos = render_video_log(
+    video_metrics, video_log, video_collection, video_gallery, missing_videos = render_video_log(
         weeks, standings, video_config
     )
     overdue_teams = {team for team, _ in missing_videos}
@@ -459,6 +505,7 @@ def render_page(weeks, standings, total):
         video_metrics=video_metrics,
         video_log=video_log,
         video_collection=video_collection,
+        video_gallery=video_gallery,
     )
 
 
