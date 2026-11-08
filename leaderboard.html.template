@@ -173,6 +173,7 @@
     .browse-results > li { padding: .65rem .8rem; border: 1px solid var(--line); border-radius: .55rem; background: var(--surface); overflow-wrap: anywhere; }
     .browse-results strong { display: block; margin-bottom: .15rem; font-size: .9rem; color: var(--accent); }
     .browse-results span { display: block; }
+    .browse-results .player-video-button { display: block; width: fit-content; }
     .browse-results .empty-week { color: var(--muted); }
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); }
     table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .875rem; }
@@ -239,8 +240,8 @@
     .video-missing-card strong, .video-status-missing { color: var(--danger); }
     .video-status-missing { border-color: #843143; background: #421f2b; }
     .video-special-card { border-style: dashed; }
-    .video-card-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(15rem, .75fr); gap: .8rem; align-items: start; padding: .85rem; }
-    .donut-video { width: 100%; max-height: 28rem; border: 1px solid var(--line); border-radius: .55rem; background: #08070a; }
+    .video-card-body { display: flex; flex-direction: column; align-items: center; gap: .8rem; padding: .85rem; }
+    .donut-video { display: block; width: min(100%, 52rem); max-height: 34rem; margin-inline: auto; border: 1px solid var(--line); border-radius: .55rem; background: #08070a; }
     .video-gallery { margin-top: 1rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); }
     .video-gallery summary { padding: .8rem .9rem; color: var(--accent); font-weight: 800; cursor: pointer; }
     .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .65rem; margin: 0; padding: 0 .8rem .8rem; list-style: none; }
@@ -256,8 +257,9 @@
     .rating-best span:last-child { color: #f6c866; }
     .rating-worst { border-color: #713143; background: #281c24; }
     .rating-worst span:last-child { color: var(--danger); }
-    .star-rating { display: grid; gap: .8rem; padding: .85rem; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface-raised); }
-    .your-rating, .league-rating { display: grid; gap: .35rem; }
+    .star-rating { display: grid; width: min(100%, 52rem); gap: .85rem; padding: .9rem; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface-raised); text-align: center; }
+    .your-rating, .league-rating { display: grid; justify-items: center; gap: .35rem; }
+    .league-rating { padding-top: .8rem; border-top: 1px solid var(--line); }
     .your-rating > span:first-child, .league-rating > span:first-child { color: var(--muted); font: 750 .68rem ui-monospace, monospace; letter-spacing: .07em; text-transform: uppercase; }
     .star-control { position: relative; display: inline-block; flex: 0 0 auto; color: #64546a; font-size: 1.35rem; line-height: 1; letter-spacing: .03em; white-space: nowrap; }
     .star-fill { position: absolute; inset: 0 auto 0 0; width: 0; overflow: hidden; color: #f6c866; white-space: nowrap; pointer-events: none; }
@@ -267,9 +269,19 @@
     .league-rating strong { color: var(--accent); font-size: 1.15rem; }
     .rating-error { margin: 0; color: var(--danger); font-size: .78rem; }
     @media (max-width: 36rem) {
-      .wrap { width: calc(100% - 1.5rem); }
-      .hero { padding-block: 1.7rem; }
-      .donut { margin-right: 0; }
+      .wrap { width: calc(100% - 1rem); }
+      .brand { padding-block: .75rem; }
+      .hero { align-items: flex-start; gap: .5rem; padding-block: 1.35rem 1.55rem; }
+      .hero h1 { font-size: clamp(2.35rem, 15vw, 3.5rem); }
+      .donut { width: 4.4rem; margin: .25rem 0 0; }
+      main { padding-top: 1rem; }
+      .metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; margin-bottom: 1rem; }
+      .metrics > div { display: grid; gap: 0; padding: .55rem .65rem; }
+      .podium { margin-bottom: 1.25rem; padding-inline: .4rem; }
+      .podium-steps { padding-top: .65rem; }
+      .view-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
+      .view-controls button { padding-inline: .3rem; font-size: .86rem; }
+      .browse { width: 100%; max-width: none; }
       th, td { padding: .55rem .55rem; }
       tr > :first-child { min-width: 9.25rem; max-width: 9.25rem; }
       .section-heading { align-items: flex-start; }
@@ -278,7 +290,11 @@
       .rating-highlights { grid-template-columns: 1fr; }
       details.video-card > summary, li.video-missing-card { grid-template-columns: 4.25rem minmax(0, 1fr); }
       details.video-card .video-status, li.video-missing-card .video-status { grid-column: 2; grid-row: 3; justify-self: start; min-height: 2rem; }
-      .video-card-body { grid-template-columns: 1fr; }
+      .video-card-body { padding: .6rem; }
+      .star-rating { padding: .75rem .6rem; }
+      .video-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .video-metrics > div { justify-content: center; }
+      .gallery-grid { grid-template-columns: 1fr; padding-inline: .55rem; }
     }
   </style>
 </head>
@@ -424,6 +440,7 @@
           Array.from(cell.querySelectorAll("li"), player => ({
             name: player.dataset.player || player.textContent,
             missing: player.classList.contains("video-missing"),
+            target: player.querySelector("[data-video-target]")?.dataset.videoTarget || "",
           }))
         ),
       }));
@@ -462,8 +479,16 @@
           if (missing) label.className = "video-missing";
           card.append(label);
           for (const player of players.length ? players : [{ name: "No donuts", missing: false }]) {
-            const name = document.createElement("span");
+            const name = player.target && !player.missing
+              ? document.createElement("button")
+              : document.createElement("span");
             name.textContent = player.name;
+            if (player.target && !player.missing) {
+              name.type = "button";
+              name.className = "player-video-button";
+              name.dataset.videoTarget = player.target;
+              name.setAttribute("aria-label", "Open the video for " + player.name);
+            }
             if (player.missing) name.className = "video-missing";
             if (!players.length) name.className = "empty-week";
             card.append(name);
