@@ -315,6 +315,33 @@ def render(weeks, standings, total):
     return "\n".join(report) + "\n"
 
 
+def render_podium(standings):
+    podium = []
+    trophy = (
+        '<svg class="trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        '<path d="M7 4h10v6a5 5 0 0 1-10 0V4Zm0 2H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4'
+        'M12 15v5m-4 0h8"/></svg>'
+    )
+    for place, label in ((1, "1st"), (2, "2nd"), (3, "3rd")):
+        teams = [(name, count) for rank, name, count, _ in standings if rank == place and count]
+        if not teams:
+            continue
+        count = teams[0][1]
+        if len(teams) == 1:
+            names = f'<p class="podium-name">{html.escape(teams[0][0])}</p>'
+        else:
+            tied_names = "".join(f"<li>{html.escape(name)}</li>" for name, _ in teams)
+            names = f'<details class="podium-tie"><summary>{len(teams)} teams tied</summary><ul>{tied_names}</ul></details>'
+        podium.append(
+            f'<div class="podium-place place-{place}">'
+            f'{trophy if place == 1 else ""}{names}'
+            f'<div class="podium-step"><strong>{label}</strong>'
+            f'<span>{count} {"donut" if count == 1 else "donuts"}</span></div></div>'
+        )
+    return "\n".join(podium)
+
+
 def render_page(weeks, standings, total):
     escape = html.escape
     table_rows = []
@@ -334,11 +361,14 @@ def render_page(weeks, standings, total):
         table_rows.append(f"<tr{leader}>" + "".join(cells) + "</tr>")
 
     template = Template((ROOT / "leaderboard.html.template").read_text(encoding="utf-8"))
+    podium = render_podium(standings)
     return template.substitute(
         season=SEASON,
         coverage=f"Through Week {weeks[-1]}" if weeks else "Waiting for Week 1",
         total=total,
         teams=len(standings),
+        podium=podium,
+        podium_hidden="" if podium else " hidden",
         week_headers="".join(f'<th scope="col">Week {week}</th>' for week in weeks),
         leaderboard="\n".join(table_rows),
     )
