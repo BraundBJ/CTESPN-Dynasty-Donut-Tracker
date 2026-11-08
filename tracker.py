@@ -373,6 +373,12 @@ def load_video_submissions():
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def video_entry_id(week, team, player):
+    label = f"{team}-{player}".casefold()
+    label = re.sub(r"[^a-z0-9]+", "-", label).strip("-")
+    return f"video-{week}-{label}"
+
+
 def render_video_log(weeks, standings, config):
     missing = {(item["team"], item["player"]) for item in config.get("missing", [])}
     links = {
@@ -390,10 +396,12 @@ def render_video_log(weeks, standings, config):
         links[item["team"], item["player"], item["week"]] = item["url"]
 
     cards = []
+    video_targets = {}
     for week, team, player, is_missing, is_special in sorted(
         entries, key=lambda item: (-item[0], item[1].casefold(), item[2].casefold())
     ):
         classes = ["video-card"]
+        target_id = video_entry_id(week, team, player)
         if is_missing:
             classes.append("video-missing-card")
         if is_special:
@@ -410,6 +418,7 @@ def render_video_log(weeks, standings, config):
                     f'<video class="donut-video" controls playsinline preload="metadata" '
                     f'src="{html.escape(url, quote=True)}"></video>'
                 )
+                video_targets[week, team, player] = target_id
             elif url:
                 action = f'<a class="video-status" href="{html.escape(url, quote=True)}">Videos</a>'
                 media = ""
@@ -418,21 +427,36 @@ def render_video_log(weeks, standings, config):
                 media = ""
             rating_key = f"{week}|{team}|{player}"
             rating = (
-                f'<label class="star-rating" data-rating-key="{html.escape(rating_key, quote=True)}" '
+                f'<div class="star-rating" data-rating-key="{html.escape(rating_key, quote=True)}" '
                 f'data-player="{html.escape(player, quote=True)}" data-team="{html.escape(team, quote=True)}">'
-                '<span class="star-control">'
+                '<div class="your-rating"><span>Your rating</span>'
+                '<label class="star-control">'
                 '<span class="star-base" aria-hidden="true">★★★★★</span>'
                 '<span class="star-fill" aria-hidden="true">★★★★★</span>'
                 f'<input type="range" min="0" max="5" step="0.5" value="0" '
                 f'aria-label="Rate {html.escape(player, quote=True)} from 0 to 5 stars">'
-                '</span><output>Not rated</output></label>'
+                '</label><output>Not rated</output></div>'
+                '<div class="league-rating"><span>League average</span>'
+                '<strong data-league-average>Not rated</strong>'
+                '<small data-vote-count>No votes</small></div>'
+                '<p class="rating-error" role="status" hidden></p></div>'
             )
-        cards.append(
-            f'<li class="{" ".join(classes)}">'
-            f'<span class="video-week">Week {week}</span>'
-            f'<strong>{html.escape(player)}</strong>'
-            f'<span class="video-team">{html.escape(team)}</span>{action}{media}{rating}</li>'
-        )
+        if is_missing:
+            cards.append(
+                f'<li class="{" ".join(classes)}">'
+                f'<span class="video-week">Week {week}</span>'
+                f'<strong>{html.escape(player)}</strong>'
+                f'<span class="video-team">{html.escape(team)}</span>{action}</li>'
+            )
+        else:
+            cards.append(
+                f'<li><details class="{" ".join(classes)}" id="{html.escape(target_id, quote=True)}">'
+                '<summary>'
+                f'<span class="video-week">Week {week}</span>'
+                f'<strong>{html.escape(player)}</strong>'
+                f'<span class="video-team">{html.escape(team)}</span>{action}</summary>'
+                f'<div class="video-card-body">{media}{rating}</div></details></li>'
+            )
 
     missing_count = sum(is_missing for _, _, _, is_missing, _ in entries)
     submitted_count = len(entries) - missing_count
@@ -450,13 +474,13 @@ def render_video_log(weeks, standings, config):
         f'src="{html.escape(item["url"], quote=True)}"></video></li>'
         for item in config.get("gallery", [])
     )
-    return metrics, "".join(cards), collection_link, gallery, missing
+    return metrics, "".join(cards), collection_link, gallery, missing, video_targets
 
 
 def render_page(weeks, standings, total):
     escape = html.escape
     video_config = load_video_submissions()
-    video_metrics, video_log, video_collection, video_gallery, missing_videos = render_video_log(
+    video_metrics, video_log, video_collection, video_gallery, missing_videos, video_targets = render_video_log(
         weeks, standings, video_config
     )
     overdue_teams = {team for team, _ in missing_videos}
@@ -473,18 +497,29 @@ def render_page(weeks, standings, total):
             f'<span class="team-name">{escape(team)}</span></th>',
             f'<td class="score">{count}</td>',
         ]
-        for players in weekly:
+        for week, players in zip(weeks, weekly):
             if players:
                 player_items = []
                 for name in players:
-                    missing_attributes = (
-                        ' class="video-missing" title="Video missing"'
-                        if (team, name) in missing_videos else ""
-                    )
-                    player_items.append(
-                        f'<li data-player="{escape(name, quote=True)}"{missing_attributes}>'
-                        f'{escape(name)}</li>'
-                    )
+                    if (team, name) in missing_videos:
+                        player_items.append(
+                            f'<li data-player="{escape(name, quote=True)}" '
+                            'class="video-missing" title="Video missing">'
+                            f'{escape(name)}</li>'
+                        )
+                    elif (week, team, name) in video_targets:
+                        target = video_targets[week, team, name]
+                        player_items.append(
+                            f'<li data-player="{escape(name, quote=True)}">'
+                            f'<button class="player-video-button" type="button" '
+                            f'data-video-target="{escape(target, quote=True)}" '
+                            f'aria-label="Open the Week {week} video for {escape(name, quote=True)}">'
+                            f'{escape(name)}</button></li>'
+                        )
+                    else:
+                        player_items.append(
+                            f'<li data-player="{escape(name, quote=True)}">{escape(name)}</li>'
+                        )
                 names = "".join(player_items)
                 cells.append(f'<td class="has-donut"><ul>{names}</ul></td>')
             else:

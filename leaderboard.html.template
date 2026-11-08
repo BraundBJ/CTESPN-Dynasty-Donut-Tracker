@@ -192,6 +192,8 @@
     .has-donut { background: #352638; }
     .has-donut ul { list-style: none; margin: 0; padding: 0; }
     .has-donut li + li { margin-top: .35rem; padding-top: .35rem; border-top: 1px solid var(--line); }
+    .player-video-button { display: inline; margin: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; text-decoration: underline; text-decoration-color: #9b6e94; text-underline-offset: .2rem; cursor: pointer; }
+    .player-video-button:hover, .player-video-button:focus-visible { color: var(--accent); text-decoration-color: currentColor; }
     .video-overdue .team-name, .video-missing { color: var(--danger); }
     #videos { margin-top: 2.4rem; padding-top: 1.6rem; border-top: 1px solid var(--line); }
     .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -213,18 +215,32 @@
     .video-metrics strong { color: var(--accent); font-size: 1.2rem; }
     .video-metrics span { color: var(--muted); font-size: .85rem; }
     .video-missing-metric strong { color: var(--danger); }
-    .video-log { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .65rem; margin: 0; padding: 0; list-style: none; }
-    .video-card { align-self: start; display: grid; grid-template-columns: 1fr auto; gap: .1rem .75rem; align-items: center; min-width: 0; padding: .8rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); }
+    .video-log { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+    .video-card { min-width: 0; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); overflow: hidden; }
+    details.video-card > summary { display: grid; grid-template-columns: 5rem minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: .1rem .8rem; align-items: center; padding: .75rem .85rem; cursor: pointer; list-style: none; }
+    details.video-card > summary::-webkit-details-marker { display: none; }
+    details.video-card > summary::before { content: "›"; grid-column: 1; grid-row: 1 / span 2; align-self: center; color: var(--accent); font-size: 1.45rem; transform-origin: center; transition: transform .16s ease; }
+    details.video-card[open] > summary::before { transform: rotate(90deg); }
+    details.video-card[open] > summary { border-bottom: 1px solid var(--line); background: var(--surface-raised); }
     .video-card strong, .video-team { min-width: 0; overflow-wrap: anywhere; }
-    .video-card strong { grid-column: 1; }
-    .video-week { grid-column: 1; color: var(--muted); font: 700 .72rem ui-monospace, monospace; text-transform: uppercase; }
-    .video-team { grid-column: 1; color: var(--muted); font-size: .82rem; }
-    .video-status { grid-column: 2; grid-row: 1 / span 3; min-width: 4.75rem; min-height: 2.35rem; font-size: .82rem; }
+    details.video-card strong { grid-column: 2; grid-row: 1; }
+    .video-week { color: var(--muted); font: 700 .72rem ui-monospace, monospace; text-transform: uppercase; }
+    details.video-card .video-week { grid-column: 1; grid-row: 1 / span 2; padding-left: 1.25rem; }
+    .video-team { color: var(--muted); font-size: .82rem; }
+    details.video-card .video-team { grid-column: 2; grid-row: 2; }
+    .video-status { min-width: 4.75rem; min-height: 2.35rem; font-size: .82rem; }
+    details.video-card .video-status { grid-column: 3; grid-row: 1 / span 2; }
     .video-missing-card { border-color: #843143; background: #2c1b24; }
+    li.video-missing-card { display: grid; grid-template-columns: 5rem minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: .1rem .8rem; align-items: center; padding: .75rem .85rem; }
+    li.video-missing-card .video-week { grid-column: 1; grid-row: 1 / span 2; }
+    li.video-missing-card strong { grid-column: 2; grid-row: 1; }
+    li.video-missing-card .video-team { grid-column: 2; grid-row: 2; }
+    li.video-missing-card .video-status { grid-column: 3; grid-row: 1 / span 2; }
     .video-missing-card strong, .video-status-missing { color: var(--danger); }
     .video-status-missing { border-color: #843143; background: #421f2b; }
     .video-special-card { border-style: dashed; }
-    .donut-video { grid-column: 1 / -1; width: 100%; max-height: 22rem; margin-top: .6rem; border: 1px solid var(--line); border-radius: .55rem; background: #08070a; }
+    .video-card-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(15rem, .75fr); gap: .8rem; align-items: start; padding: .85rem; }
+    .donut-video { width: 100%; max-height: 28rem; border: 1px solid var(--line); border-radius: .55rem; background: #08070a; }
     .video-gallery { margin-top: 1rem; border: 1px solid var(--line); border-radius: .75rem; background: var(--surface); }
     .video-gallery summary { padding: .8rem .9rem; color: var(--accent); font-weight: 800; cursor: pointer; }
     .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .65rem; margin: 0; padding: 0 .8rem .8rem; list-style: none; }
@@ -240,12 +256,16 @@
     .rating-best span:last-child { color: #f6c866; }
     .rating-worst { border-color: #713143; background: #281c24; }
     .rating-worst span:last-child { color: var(--danger); }
-    .star-rating { grid-column: 1 / -1; display: flex; align-items: center; gap: .55rem; margin-top: .55rem; }
+    .star-rating { display: grid; gap: .8rem; padding: .85rem; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface-raised); }
+    .your-rating, .league-rating { display: grid; gap: .35rem; }
+    .your-rating > span:first-child, .league-rating > span:first-child { color: var(--muted); font: 750 .68rem ui-monospace, monospace; letter-spacing: .07em; text-transform: uppercase; }
     .star-control { position: relative; display: inline-block; flex: 0 0 auto; color: #64546a; font-size: 1.35rem; line-height: 1; letter-spacing: .03em; white-space: nowrap; }
     .star-fill { position: absolute; inset: 0 auto 0 0; width: 0; overflow: hidden; color: #f6c866; white-space: nowrap; pointer-events: none; }
     .star-rating input { position: absolute; inset: -.35rem 0; width: 100%; height: calc(100% + .7rem); margin: 0; opacity: 0; cursor: pointer; }
     .star-control:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: .2rem; border-radius: .2rem; }
-    .star-rating output { color: var(--muted); font: 700 .75rem ui-monospace, monospace; white-space: nowrap; }
+    .star-rating output, .league-rating small { color: var(--muted); font: 700 .75rem ui-monospace, monospace; white-space: nowrap; }
+    .league-rating strong { color: var(--accent); font-size: 1.15rem; }
+    .rating-error { margin: 0; color: var(--danger); font-size: .78rem; }
     @media (max-width: 36rem) {
       .wrap { width: calc(100% - 1.5rem); }
       .hero { padding-block: 1.7rem; }
@@ -256,6 +276,9 @@
       .collection-link { flex: 0 0 auto; }
       .access-card form { grid-template-columns: 1fr; }
       .rating-highlights { grid-template-columns: 1fr; }
+      details.video-card > summary, li.video-missing-card { grid-template-columns: 4.25rem minmax(0, 1fr); }
+      details.video-card .video-status, li.video-missing-card .video-status { grid-column: 2; grid-row: 3; justify-self: start; min-height: 2rem; }
+      .video-card-body { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -511,42 +534,49 @@
       controls.hidden = false;
     })();
     (() => {
-      const storageKey = "ctespn-video-ratings-v1";
+      const endpoint = "https://ctespn-donut-ratings-api.thrivingaria1.chatgpt.site/ratings";
+      const voterStorageKey = "ctespn-rating-voter-v1";
       const controls = Array.from(document.querySelectorAll(".star-rating"));
       const bestPlayer = document.querySelector("#best-rated-player");
       const bestScore = document.querySelector("#best-rated-score");
       const worstPlayer = document.querySelector("#worst-rated-player");
       const worstScore = document.querySelector("#worst-rated-score");
-      let saved = {};
-      try { saved = JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch (error) {}
+      let voterId = "";
+      try { voterId = localStorage.getItem(voterStorageKey) || ""; } catch (error) {}
+      if (!voterId) {
+        voterId = crypto.randomUUID();
+        try { localStorage.setItem(voterStorageKey, voterId); } catch (error) {}
+      }
 
-      function setVisual(control) {
+      function setYourVisual(control, rated = control.dataset.rated === "true") {
         const input = control.querySelector("input");
         const value = Number(input.value);
         control.querySelector(".star-fill").style.width = (value * 20) + "%";
-        control.querySelector("output").value = control.dataset.rated === "true"
-          ? value.toFixed(1) + " / 5"
+        control.querySelector("output").value = rated
+          ? value.toFixed(1) + " ★"
           : "Not rated";
       }
 
-      function ratedControls() {
+      function leagueRatings() {
         return controls
-          .filter(control => control.dataset.rated === "true")
+          .filter(control => Number(control.dataset.voteCount || 0) > 0)
           .map(control => ({
             player: control.dataset.player,
             team: control.dataset.team,
-            value: Number(control.querySelector("input").value),
+            value: Number(control.dataset.leagueAverage),
+            count: Number(control.dataset.voteCount),
           }));
       }
 
       function setLeader(playerNode, scoreNode, ratings, value) {
         const tied = ratings.filter(rating => rating.value === value);
         playerNode.textContent = tied.map(rating => rating.player).join(" · ");
-        scoreNode.textContent = value.toFixed(1) + " ★";
+        const votes = tied.reduce((total, rating) => total + rating.count, 0);
+        scoreNode.textContent = value.toFixed(2) + " ★ · " + votes + " " + (votes === 1 ? "vote" : "votes");
       }
 
       function updateLeaders() {
-        const ratings = ratedControls();
+        const ratings = leagueRatings();
         if (!ratings.length) {
           bestPlayer.textContent = worstPlayer.textContent = "Not rated";
           bestScore.textContent = worstScore.textContent = "—";
@@ -557,24 +587,92 @@
         setLeader(worstPlayer, worstScore, ratings, Math.min(...values));
       }
 
+      function applyRating(control, rating) {
+        const yourRating = rating?.yourRating;
+        const average = rating?.average;
+        const count = Number(rating?.count || 0);
+        const input = control.querySelector("input");
+        if (yourRating !== null && yourRating !== undefined) {
+          input.value = yourRating;
+          control.dataset.rated = "true";
+        } else {
+          input.value = 0;
+          control.dataset.rated = "false";
+        }
+        control.dataset.leagueAverage = count ? Number(average) : "";
+        control.dataset.voteCount = count;
+        control.querySelector("[data-league-average]").textContent =
+          count ? Number(average).toFixed(2) + " ★" : "Not rated";
+        control.querySelector("[data-vote-count]").textContent =
+          count + " " + (count === 1 ? "vote" : "votes");
+        setYourVisual(control);
+      }
+
+      function showError(control, message) {
+        const error = control.querySelector(".rating-error");
+        error.textContent = message;
+        error.hidden = !message;
+      }
+
+      async function loadRatings() {
+        const response = await fetch(endpoint + "?voter=" + encodeURIComponent(voterId), {
+          headers: { "accept": "application/json" },
+        });
+        if (!response.ok) throw new Error("Ratings are unavailable.");
+        const payload = await response.json();
+        for (const control of controls) {
+          applyRating(control, payload.ratings?.[control.dataset.ratingKey]);
+        }
+        updateLeaders();
+      }
+
+      async function saveRating(control) {
+        const input = control.querySelector("input");
+        input.disabled = true;
+        showError(control, "");
+        try {
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              videoKey: control.dataset.ratingKey,
+              voterId,
+              rating: Number(input.value),
+            }),
+          });
+          if (!response.ok) throw new Error("Could not save your rating.");
+          const saved = await response.json();
+          applyRating(control, saved);
+          updateLeaders();
+        } catch (error) {
+          showError(control, "Could not save. Try again.");
+        } finally {
+          input.disabled = false;
+        }
+      }
+
       for (const control of controls) {
         const input = control.querySelector("input");
-        if (Object.prototype.hasOwnProperty.call(saved, control.dataset.ratingKey)) {
-          input.value = saved[control.dataset.ratingKey];
-          control.dataset.rated = "true";
-        }
-        setVisual(control);
+        setYourVisual(control, false);
         input.addEventListener("input", () => {
-          control.dataset.rated = "true";
-          setVisual(control);
-          updateLeaders();
+          setYourVisual(control, true);
         });
-        input.addEventListener("change", () => {
-          saved[control.dataset.ratingKey] = Number(input.value);
-          try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch (error) {}
-        });
+        input.addEventListener("change", () => saveRating(control));
       }
-      updateLeaders();
+
+      loadRatings().catch(() => {
+        for (const control of controls) showError(control, "Ratings are temporarily unavailable.");
+      });
+
+      document.addEventListener("click", event => {
+        const button = event.target.closest(".player-video-button");
+        if (!button) return;
+        const card = document.getElementById(button.dataset.videoTarget);
+        if (!card) return;
+        card.open = true;
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.querySelector("summary")?.focus({ preventScroll: true });
+      });
     })();
   </script>
 </body>

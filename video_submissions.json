@@ -20,7 +20,9 @@
     {"team": "The Tetless Offensive", "player": "Brian Thomas Jr.", "url": "videos/clip-11.mp4"},
     {"team": "Benjamin Jeantanyahu", "player": "Cam Skattebo", "url": "videos/clip-12.mp4"},
     {"week": 7, "team": "Captain Jahmyrica", "player": "Breece Hall", "url": "videos/clip-13.mp4"},
-    {"team": "Price is Right", "player": "Jake Ferguson", "url": "videos/clip-14.mp4"},
+    {"week": 7, "team": "Price is Right", "player": "Jake Ferguson", "url": "videos/clip-14.mp4"},
+    {"week": 8, "team": "Price is Right", "player": "Jake Ferguson", "url": "videos/clip-16.mp4"},
+    {"week": 8, "team": "Price is Right", "player": "Cade Otton", "url": "videos/clip-17.mp4"},
     {"team": "LEASTIMNOTDRINKINGBRIAN", "player": "Will Reichard", "url": "videos/clip-15.mp4"},
     {"team": "Naberhood Watch", "player": "Tre Tucker", "url": "videos/clip-18.mp4"}
   ],
@@ -43,8 +45,8 @@
     {"label": "Breece Hall", "url": "videos/clip-13.mp4"},
     {"label": "Jake Ferguson", "url": "videos/clip-14.mp4"},
     {"label": "Will Reichard", "url": "videos/clip-15.mp4"},
-    {"label": "Clip 16", "url": "videos/clip-16.mp4"},
-    {"label": "Clip 17", "url": "videos/clip-17.mp4"},
+    {"label": "Jake Ferguson · Week 8", "url": "videos/clip-16.mp4"},
+    {"label": "Cade Otton · Week 8", "url": "videos/clip-17.mp4"},
     {"label": "Tre Tucker", "url": "videos/clip-18.mp4"}
   ]
 }

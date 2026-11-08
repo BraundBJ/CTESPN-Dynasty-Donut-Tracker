@@ -2,7 +2,8 @@
   "add": [
     {"week": 4, "roster_id": 4, "player": "Ladd McConkey"},
     {"week": 5, "roster_id": 4, "player": "Ladd McConkey"},
-    {"week": 7, "roster_id": 12, "player": "Breece Hall"}
+    {"week": 7, "roster_id": 12, "player": "Breece Hall"},
+    {"week": 8, "roster_id": 10, "player": "Jake Ferguson"}
   ],
   "remove": []
 }
