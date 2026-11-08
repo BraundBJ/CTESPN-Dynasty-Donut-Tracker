@@ -3,104 +3,77 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Track confirmed zero-point starts across the CTESPN Dynasty fantasy football league.">
-  <meta name="theme-color" content="#201b26">
+  <meta name="description" content="The CTESPN Dynasty fantasy football donut standings.">
+  <meta name="theme-color" content="#151219">
   <title>CTESPN Dynasty Donut Tracker</title>
   <style>
     :root {
-      color-scheme: light;
-      --ink: #201b26;
-      --muted: #625965;
-      --canvas: #fcf6ed;
-      --surface: #fffdf9;
-      --line: #eadfd2;
-      --pink: #ffadbc;
-      --accent: #9a284b;
-      font: 16px/1.55 system-ui, sans-serif;
+      color-scheme: dark;
+      --canvas: #151219;
+      --surface: #201b26;
+      --surface-raised: #2b2333;
+      --line: #46394d;
+      --ink: #fbf3fa;
+      --muted: #c4b2c8;
+      --accent: #ffadbc;
       background: var(--canvas);
       color: var(--ink);
+      font: 16px/1.5 system-ui, sans-serif;
     }
     * { box-sizing: border-box; }
-    body, h1, h2, h3, p { margin: 0; }
-    a { color: var(--accent); text-underline-offset: .22em; }
-    :focus-visible { outline: 2px solid currentColor; outline-offset: .25rem; }
-    .wrap { width: min(69rem, calc(100% - 2.5rem)); margin-inline: auto; }
-    header { color: var(--canvas); background: var(--ink); border-bottom: 4px solid var(--pink); }
-    .topbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .65rem 1.5rem; padding: 1rem 0; border-bottom: 1px solid #49404d; }
-    .brand { color: var(--pink); }
-    nav { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; font-size: .9rem; }
-    nav a { color: inherit; text-decoration: none; }
-    nav a:hover { text-decoration: underline; }
-    .hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 3rem 0 3.4rem; }
-    .kicker { font: 700 .78rem/1.4 ui-monospace, monospace; letter-spacing: .085em; text-transform: uppercase; }
-    .hero .kicker { color: var(--pink); }
-    h1 { font-size: clamp(2.75rem, 8vw, 5.75rem); line-height: .98; letter-spacing: -.065em; margin: .6rem 0 .85rem; }
-    .intro { max-width: 33rem; color: #eee0e5; }
-    .donut { flex: 0 0 auto; width: clamp(5rem, 21vw, 12rem); height: auto; transform: rotate(-12deg); }
-    main { padding: 1.75rem 0 3rem; }
-    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-bottom: 2rem; }
-    .metrics > div, .panel { background: var(--surface); border: 1px solid var(--line); border-radius: .85rem; }
-    .metrics > div { padding: .7rem .95rem .85rem; }
-    .metrics strong { display: block; color: var(--accent); font-size: 2rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
-    .metrics span, .quiet { color: var(--muted); font-size: .88rem; }
-    .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); gap: 1.2rem; align-items: start; }
-    .section-heading { margin: 0 0 .8rem; }
-    h2 { font-size: 1.55rem; letter-spacing: -.03em; line-height: 1.15; }
-    h3 { font-size: 1rem; }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
-    th, td { padding: .65rem .7rem; border-bottom: 1px solid var(--line); text-align: left; }
-    thead { background: #f9e9e2; }
-    thead th { font-size: .8rem; }
-    th:nth-child(1), th:nth-child(n+3), td { text-align: center; font-variant-numeric: tabular-nums; }
-    tbody td { color: var(--muted); }
-    tbody th { overflow-wrap: anywhere; }
-    tbody .leader { background: #fff1f1; }
+    body, h1, h2, p { margin: 0; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: .25rem; }
+    .wrap { width: min(86rem, calc(100% - 3rem)); margin-inline: auto; }
+    header { background: var(--surface); border-bottom: 1px solid var(--line); }
+    .brand { padding: 1rem 0; border-bottom: 1px solid var(--line); color: var(--accent); font-weight: 750; }
+    .hero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 2.5rem 0 2.75rem; }
+    .kicker { color: var(--accent); font: 700 .78rem/1.4 ui-monospace, monospace; letter-spacing: .085em; text-transform: uppercase; }
+    h1 { font-size: clamp(2.55rem, 7vw, 5rem); line-height: 1; letter-spacing: -.065em; margin: .45rem 0 .75rem; }
+    .intro { max-width: 38rem; color: var(--muted); }
+    .donut { flex: 0 0 auto; width: clamp(4.5rem, 17vw, 9rem); height: auto; margin-right: .75rem; transform: rotate(-12deg); }
+    main { padding: 1.5rem 0 3rem; }
+    .metrics { display: flex; flex-wrap: wrap; gap: .65rem; margin-bottom: 1.5rem; }
+    .metrics > div { display: flex; align-items: baseline; gap: .6rem; padding: .5rem .85rem; border: 1px solid var(--line); border-radius: .65rem; background: var(--surface); }
+    .metrics strong { font-size: 1.35rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .metrics span, .hint { color: var(--muted); font-size: .88rem; }
+    h2 { font-size: 1.55rem; letter-spacing: -.03em; }
+    .hint { margin: .2rem 0 .85rem; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .875rem; }
+    th, td { padding: .65rem .75rem; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); text-align: left; vertical-align: middle; }
+    tr > :last-child { border-right: 0; }
     tbody tr:last-child > * { border-bottom: 0; }
+    thead th { background: var(--surface-raised); white-space: nowrap; }
+    tr > :first-child { position: sticky; left: 0; z-index: 1; min-width: 13rem; background: var(--surface); }
+    thead tr > :first-child { background: var(--surface-raised); }
+    tbody th { overflow-wrap: anywhere; }
+    .rank { margin-right: .4rem; color: var(--muted); font: 700 .74rem ui-monospace, monospace; }
+    tbody .leader th { color: var(--accent); }
+    td { min-width: 6.25rem; }
+    .score, .total-heading { min-width: 0; text-align: center; font-variant-numeric: tabular-nums; }
     .score { color: var(--accent); font-weight: 800; }
-    details { border-bottom: 1px solid var(--line); }
-    details:last-child { border-bottom: 0; }
-    summary { cursor: pointer; padding: .68rem .85rem; }
-    summary span { margin-left: .6rem; color: var(--muted); font-size: .8rem; }
-    details[open] summary { background: #f9e9e2; }
-    .weekly { overflow: hidden; }
-    .plays { list-style: none; margin: 0; padding: .05rem .85rem; }
-    .plays li { padding: .62rem 0; }
-    .plays li + li { border-top: 1px solid var(--line); }
-    .plays span { display: block; color: var(--muted); font-size: .82rem; }
-    .plays p, .empty { font-size: .88rem; }
-    .empty { padding: .72rem .85rem; }
-    .reviews { margin-top: 2.15rem; }
-    .reviews h3 { padding: .7rem .85rem 0; }
-    .reviews .panel > details { margin-top: .4rem; border-top: 1px solid var(--line); }
-    footer { border-top: 1px solid var(--line); padding: 1.15rem 0 2rem; }
-    footer a { margin-right: .65rem; }
-    @media (max-width: 48rem) { .grid { grid-template-columns: 1fr; gap: 1.55rem; } }
-    @media (max-width: 28rem) {
+    .no-donut { text-align: center; color: var(--muted); }
+    .has-donut { background: #352638; }
+    .has-donut ul { list-style: none; margin: 0; padding: 0; }
+    .has-donut li + li { margin-top: .35rem; padding-top: .35rem; border-top: 1px solid var(--line); }
+    @media (max-width: 36rem) {
       .wrap { width: calc(100% - 1.5rem); }
-      .hero { gap: .45rem; padding-block: 2.25rem; }
-      .metrics { gap: .4rem; }
-      .metrics > div { padding: .55rem; }
-      th, td { padding: .58rem .4rem; }
+      .hero { padding-block: 1.7rem; }
+      .donut { margin-right: 0; }
+      th, td { padding: .55rem .55rem; }
+      tr > :first-child { min-width: 9.25rem; max-width: 9.25rem; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <div class="topbar">
-        <strong class="brand">CTESPN Dynasty</strong>
-        <nav aria-label="Leaderboard sections">
-          <a href="#leaderboard">Leaderboard</a>
-          <a href="#weekly-log">Weekly log</a>
-          <a href="#review">To verify</a>
-        </nav>
-      </div>
+      <p class="brand">CTESPN Dynasty</p>
       <div class="hero">
         <div>
           <p class="kicker">2026 season · Through Week 8</p>
           <h1>Donut Tracker</h1>
-          <p class="intro">A donut goes to a fantasy starter who scored 0.00 points and played in the third or fourth quarter.</p>
+          <p class="intro">A donut goes to a fantasy starter who played and scored 0.00 points. First-half injuries that ended a player’s game are excluded.</p>
         </div>
         <svg class="donut" viewBox="0 0 160 160" aria-hidden="true">
           <circle cx="80" cy="80" r="51" fill="none" stroke="#d58d54" stroke-width="42"/>
@@ -112,55 +85,30 @@
   </header>
   <main class="wrap">
     <section class="metrics" aria-label="Season totals">
-      <div><strong>15</strong><span>Confirmed donuts</span></div>
-      <div><strong>2</strong><span>To verify</span></div>
+      <div><strong>17</strong><span>Donuts</span></div>
       <div><strong>12</strong><span>Fantasy teams</span></div>
     </section>
-    <div class="grid">
-      <section id="leaderboard" aria-labelledby="leaderboard-title">
-        <h2 class="section-heading" id="leaderboard-title">Leaderboard</h2>
-        <div class="panel table-wrap">
-          <table aria-label="Fantasy team donut rankings">
-            <thead><tr><th scope="col">Rank</th><th scope="col">Fantasy team</th><th scope="col">Donuts</th><th scope="col">To verify</th></tr></thead>
-            <tbody><tr class="leader"><td>01</td><th scope="row">White Bower(s)</th><td class="score">3</td><td>1</td></tr>
-<tr><td>02</td><th scope="row">Aw, Shoughs</th><td class="score">2</td><td>0</td></tr>
-<tr><td>02</td><th scope="row">Benjamin Jeantanyahu</th><td class="score">2</td><td>1</td></tr>
-<tr><td>02</td><th scope="row">Naberhood Watch</th><td class="score">2</td><td>0</td></tr>
-<tr><td>02</td><th scope="row">Price is Right</th><td class="score">2</td><td>0</td></tr>
-<tr><td>06</td><th scope="row">Decatur Staleys</th><td class="score">1</td><td>0</td></tr>
-<tr><td>06</td><th scope="row">LEASTIMNOTDRINKINGBRIAN</th><td class="score">1</td><td>0</td></tr>
-<tr><td>06</td><th scope="row">Quinshon Judkins Fan Club</th><td class="score">1</td><td>0</td></tr>
-<tr><td>06</td><th scope="row">The Tetless Offensive</th><td class="score">1</td><td>0</td></tr>
-<tr><td>10</td><th scope="row">Captain Jahmyrica</th><td class="score">0</td><td>0</td></tr>
-<tr><td>10</td><th scope="row">Love Air Jordyn</th><td class="score">0</td><td>0</td></tr>
-<tr><td>10</td><th scope="row">Steve</th><td class="score">0</td><td>0</td></tr></tbody>
-          </table>
-        </div>
-      </section>
-      <section id="weekly-log" aria-labelledby="weekly-title">
-        <h2 class="section-heading" id="weekly-title">Weekly log</h2>
-        <div class="panel weekly"><details open><summary><strong>Week 8</strong> <span>5 confirmed · 1 to verify</span></summary><ul class="plays"><li><strong>Omar Cooper Jr.</strong><span>Benjamin Jeantanyahu</span><p>50 offensive snaps. At most 44 could have been outside Q3–Q4. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873029">Source</a></p></li><li><strong>Zay Flowers</strong><span>Benjamin Jeantanyahu</span><p>Q3 14:54 pass (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873026">Source</a></p></li><li><strong>Will Reichard</strong><span>LEASTIMNOTDRINKINGBRIAN</span><p>Q3 15:00 kickoff (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873030">Source</a></p></li><li><strong>Tre Tucker</strong><span>Naberhood Watch</span><p>Q4 09:21 pass (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873029">Source</a></p></li><li><strong>Cade Otton</strong><span>Price is Right</span><p>57 offensive snaps. At most 29 could have been outside Q3–Q4. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873025">Source</a></p></li></ul></details>
-<details><summary><strong>Week 7</strong> <span>1 confirmed · 0 to verify</span></summary><ul class="plays"><li><strong>Jake Ferguson</strong><span>Price is Right</span><p>Q4 10:05 pass (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873009">Source</a></p></li></ul></details>
-<details><summary><strong>Week 6</strong> <span>1 confirmed · 1 to verify</span></summary><ul class="plays"><li><strong>Juwan Johnson</strong><span>Decatur Staleys</span><p>42 offensive snaps. At most 36 could have been outside Q3–Q4. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873000">Source</a></p></li></ul></details>
-<details><summary><strong>Week 5</strong> <span>1 confirmed · 0 to verify</span></summary><ul class="plays"><li><strong>Brian Thomas Jr.</strong><span>The Tetless Offensive</span><p>Q3 02:24 pass (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401872981">Source</a></p></li></ul></details>
-<details><summary><strong>Week 4</strong> <span>1 confirmed · 0 to verify</span></summary><ul class="plays"><li><strong>Kenyon Sadiq</strong><span>Quinshon Judkins Fan Club</span><p>22 offensive snaps. At most 16 could have been outside Q3–Q4. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401872972">Source</a></p></li></ul></details>
-<details><summary><strong>Week 3</strong> <span>1 confirmed · 0 to verify</span></summary><ul class="plays"><li><strong>Oronde Gadsden</strong><span>White Bower(s)</span><p>Q3 01:52 pass (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401872953">Source</a></p></li></ul></details>
-<details><summary><strong>Week 2</strong> <span>1 confirmed · 0 to verify</span></summary><ul class="plays"><li><strong>Marvin Harrison Jr.</strong><span>Naberhood Watch</span><p>37 offensive snaps. At most 36 could have been outside Q3–Q4. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401872943">Source</a></p></li></ul></details>
-<details><summary><strong>Week 1</strong> <span>4 confirmed · 0 to verify</span></summary><ul class="plays"><li><strong>Colston Loveland</strong><span>Aw, Shoughs</span><p>Q3 09:02 pass (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401872661">Source</a></p></li><li><strong>Kyle Pitts Sr.</strong><span>Aw, Shoughs</span><p>38 offensive snaps. At most 30 could have been outside Q3–Q4. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401872658">Source</a></p></li><li><strong>Jordan Addison</strong><span>White Bower(s)</span><p>Q3 11:13 pass (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401872927">Source</a></p></li><li><strong>Romeo Doubs</strong><span>White Bower(s)</span><p>Q4 14:27 pass (play-by-play) <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401872656">Source</a></p></li></ul></details></div>
-      </section>
-    </div>
-    <section class="reviews" id="review" aria-labelledby="review-title">
-      <h2 class="section-heading" id="review-title">Cases to verify</h2>
-      <div class="panel">
-        <h3>Waiting for second-half evidence</h3>
-        <ul class="plays"><li><strong>Cam Skattebo</strong><span>Week 6 · Benjamin Jeantanyahu</span><p>6 game snaps. Quarter of participation remains unverified. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873000">Source</a></p></li><li><strong>Emanuel Wilson</strong><span>Week 8 · White Bower(s)</span><p>7 game snaps. Quarter of participation remains unverified. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873036">Source</a></p></li></ul>
-        <details><summary><strong>Reviewed exclusions</strong></summary><ul class="plays"><li><strong>Rashee Rice</strong><span>Week 4 · Benjamin Jeantanyahu</span><p>Exited in Q1 with a hamstring injury and missed the rest of the game. <a href="https://dknetwork.draftkings.com/2026/10/04/will-rashee-rice-bets-be-refunded-after-injury-during-chiefs-vs-raiders-nfl-week-4/">Source</a></p></li><li><strong>Ladd McConkey</strong><span>Week 4 · White Bower(s)</span><p>Aggravated a foot injury before halftime and missed the second half. <a href="https://www.rotowire.com/football/article/nfl-box-score-breakdown-week-4-recap-usage-stats-139055">Source</a></p></li><li><strong>Roman Wilson</strong><span>Week 5 · Benjamin Jeantanyahu</span><p>Hurt his finger just before halftime and missed the second half. <a href="https://www.rotowire.com/football/article/nfl-box-score-breakdown-week-5-recap-usage-stats-140661">Source</a></p></li><li><strong>Ladd McConkey</strong><span>Week 5 · White Bower(s)</span><p>Listed under Did Not Play on page 1 of the NFL game book. <a href="https://static.www.nfl.com/image/upload/gamecenter/aa94bc51-4feb-11f1-abca-2c54536568a9.pdf#page=1">Source</a></p></li><li><strong>Jake Bates</strong><span>Week 6 · Decatur Staleys</span><p>Detroit had a Week 6 bye. <a href="https://www.detroitlions.com/news/lions-announce-2026-schedule">Source</a></p></li><li><strong>Rashod Bateman</strong><span>Week 6 · The Tetless Offensive</span><p>Left with a shoulder injury late in Q2 and missed the second half. <a href="https://www.rotowire.com/football/article/nfl-box-score-breakdown-week-6-recap-usage-stats-142315">Source</a></p></li><li><strong>Rhamondre Stevenson</strong><span>Week 7 · Aw, Shoughs</span><p>Sleeper&#x27;s lineup slot showed a zero without a player score. The NFL game book records five catches for 93 yards and a touchdown, plus 22 rushing yards. <a href="https://static.www.nfl.com/image/upload/gamecenter/aad58a18-4feb-11f1-abca-2c54536568a9.pdf#page=3">Source</a></p></li><li><strong>Breece Hall</strong><span>Week 7 · Captain Jahmyrica</span><p>Listed as inactive on page 1 of the NFL game book. <a href="https://static.www.nfl.com/image/upload/gamecenter/aaf6ec9e-4feb-11f1-abca-2c54536568a9.pdf#page=1">Source</a></p></li><li><strong>Lamar Jackson</strong><span>Week 8 · Decatur Staleys</span><p>The only recorded snap was in Q1–Q2. <a href="https://www.espn.com/nfl/playbyplay/_/gameId/401873026">Source</a></p></li><li><strong>Jake Ferguson</strong><span>Week 8 · Price is Right</span><p>Dallas reported an early ankle injury that sidelined him for the remainder of the game. <a href="https://www.dallascowboys.com/news/pic-6-dak-prescott-and-jake-ferguson-s-special-connection-pass-rush-notes-more">Source</a></p></li></ul></details>
+    <section id="leaderboard" aria-labelledby="leaderboard-title">
+      <h2 id="leaderboard-title">Weekly leaderboard</h2>
+      <p class="hint">Each week shows the players who earned a donut for that team. Scroll sideways for more weeks.</p>
+      <div class="table-wrap" id="weekly-log" tabindex="0" role="region" aria-labelledby="leaderboard-title">
+        <table aria-label="Donuts by fantasy team and week">
+          <thead><tr><th scope="col">Fantasy team</th><th scope="col" class="total-heading">Total</th><th scope="col">Week 1</th><th scope="col">Week 2</th><th scope="col">Week 3</th><th scope="col">Week 4</th><th scope="col">Week 5</th><th scope="col">Week 6</th><th scope="col">Week 7</th><th scope="col">Week 8</th></tr></thead>
+          <tbody><tr class="leader"><th scope="row"><span class="rank" aria-label="Rank 1">01</span> White Bower(s)</th><td class="score">4</td><td class="has-donut"><ul><li>Jordan Addison</li><li>Romeo Doubs</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li>Oronde Gadsden</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Emanuel Wilson</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 2">02</span> Benjamin Jeantanyahu</th><td class="score">3</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Cam Skattebo</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li>Omar Cooper Jr.</li><li>Zay Flowers</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> Aw, Shoughs</th><td class="score">2</td><td class="has-donut"><ul><li>Colston Loveland</li><li>Kyle Pitts Sr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> Naberhood Watch</th><td class="score">2</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Marvin Harrison Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Tre Tucker</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> Price is Right</th><td class="score">2</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Jake Ferguson</li></ul></td><td class="has-donut"><ul><li>Cade Otton</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 6">06</span> Decatur Staleys</th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Juwan Johnson</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 6">06</span> LEASTIMNOTDRINKINGBRIAN</th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Will Reichard</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 6">06</span> Quinshon Judkins Fan Club</th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Kenyon Sadiq</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 6">06</span> The Tetless Offensive</th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Brian Thomas Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> Captain Jahmyrica</th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> Love Air Jordyn</th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> Steve</th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr></tbody>
+        </table>
       </div>
     </section>
   </main>
-  <footer class="wrap quiet">
-    <p>Rankings count confirmed starts. Special-teams plays count. Overtime and team D/ST slots are excluded.</p>
-    <p><a href="https://github.com/BraundBJ/CTESPN-Dynasty-Donut-Tracker">Full methodology and source code</a><a href="https://docs.sleeper.com/">Sleeper</a><a href="https://nflreadr.nflverse.com/">nflverse</a></p>
-  </footer>
 </body>
 </html>

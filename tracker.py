@@ -9,7 +9,7 @@ import json
 import re
 import time
 from collections import Counter, defaultdict
-from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 from string import Template
 from urllib.error import HTTPError, URLError
@@ -20,7 +20,15 @@ LEAGUE_ID = "1313707182407024640"
 SEASON = 2026
 SLEEPER = "https://api.sleeper.app/v1/"
 NFLVERSE = "https://github.com/nflverse/nflverse-data/releases/download/"
-SECOND_HALF = {"3", "4"}
+AFTER_HALFTIME = {"3", "4", "5"}
+GAMEBOOKS = "https://static.www.nfl.com/image/upload/gamecenter/"
+QUARTERS = {"First": 1, "Second": 2, "Third": 3, "Fourth": 4, "Overtime": 5}
+BOOK_TEAMS = {"ARZ": "ARI", "BLT": "BAL", "CLV": "CLE", "HST": "HOU", "LA": "LAR"}
+INJURY_EVENT = re.compile(
+    r"\b([A-Z]{2,3})-(?:\d{1,2}-)?([\w]+)\.([\w.'-]+?) "
+    r"(was injured during the play|return is (?:Questionable|Doubtful)|has returned to the game|is Out of the game)\b",
+    re.IGNORECASE,
+)
 SCRIMMAGE = {"run", "pass", "qb_kneel", "qb_spike"}
 LIVE_PLAYS = SCRIMMAGE | {"punt", "field_goal", "extra_point", "kickoff"}
 PLAYER_ID = re.compile(r"00-\d{7}")
@@ -84,105 +92,106 @@ def load_matchups(league, teams, snapshot):
     }
 
 
-def load_evidence(games, snapshot):
+def load_appearances(games, snapshot):
     identities = {}
     for row in nfl_csv(f"rosters/roster_{SEASON}.csv", "roster.csv", snapshot):
         if row["sleeper_id"] and row["gsis_id"]:
-            identities[row["sleeper_id"]] = (row["gsis_id"], row["pfr_id"])
+            identities[row["sleeper_id"]] = row
 
-    snaps = defaultdict(list)
-    team_totals = {}
+    snaps = defaultdict(dict)
     for row in nfl_csv(f"snap_counts/snap_counts_{SEASON}.csv", "snaps.csv", snapshot):
+        if row["game_id"] in games and row["pfr_player_id"] and any(
+            int(row[field]) > 0 for field in ("offense_snaps", "defense_snaps", "st_snaps")
+        ):
+            snaps[int(row["week"]), row["pfr_player_id"]][row["game_id"]] = row["team"]
+
+    played = defaultdict(set)
+    later = defaultdict(set)
+    books = {}
+    for row in nfl_csv(f"pbp/play_by_play_{SEASON}.csv.gz", "pbp.csv.gz", snapshot):
         game_id = row["game_id"]
         if game_id not in games:
             continue
-        week = int(row["week"])
-        snaps[week, row["pfr_player_id"]].append(row)
-        count = int(row["offense_snaps"])
-        # With percentages rounded to two decimals, a count below 199
-        # can only display 1.00 if the player took every offensive snap.
-        if row["offense_pct"] and Decimal(row["offense_pct"]) == 1 and 0 < count < 199:
-            team_totals[game_id, row["team"]] = count
-
-    game_plays = {}
-    by_player = defaultdict(dict)
-    second_half_offense = Counter()
-    for row in nfl_csv(f"pbp/play_by_play_{SEASON}.csv.gz", "pbp.csv.gz", snapshot):
-        game_id = row["game_id"]
-        if game_id not in games or row["play_deleted"] == "1" or row["play_type"] not in LIVE_PLAYS:
+        if row["nfl_api_id"]:
+            books[game_id] = row["nfl_api_id"]
+        if row["play_deleted"] == "1" or row["play_type"] not in LIVE_PLAYS:
             continue
-        key = (game_id, row["play_id"])
-        week = int(row["week"])
-        if row["qtr"] in SECOND_HALF and key not in game_plays:
-            game_plays[key] = row
-            if row["play_type"] in SCRIMMAGE and row["special_teams_play"] != "1" and row["two_point_attempt"] != "1":
-                team = "LAR" if row["posteam"] == "LA" else row["posteam"]
-                second_half_offense[game_id, team] += 1
         for field, value in row.items():
             if field.endswith("_id") and field != "penalty_player_id" and PLAYER_ID.fullmatch(value or ""):
-                by_player[week, value][key] = (row, "play-by-play")
-
-    participation_path = f"pbp_participation/pbp_participation_{SEASON}.csv"
-    for row in nfl_csv(participation_path, "participation.csv", snapshot, optional=True):
-        key = (row["nflverse_game_id"], row["play_id"])
-        play = game_plays.get(key)
-        if play:
-            for player_id in PLAYER_ID.findall(row["players_on_play"]):
-                by_player[int(play["week"]), player_id].setdefault(key, (play, "FTN on-field charting"))
-    return identities, snaps, team_totals, second_half_offense, by_player
+                key = (int(row["week"]), value)
+                played[key].add(game_id)
+                if row["qtr"] in AFTER_HALFTIME:
+                    later[key].add(game_id)
+    return identities, snaps, played, later, books
 
 
-def game_link(game):
-    if game["espn"]:
-        return "https://www.espn.com/nfl/playbyplay/_/gameId/" + game["espn"]
-    return "https://www.nfl.com/schedules/" + game["season"] + "/by-week/week-" + game["week"]
+@lru_cache(maxsize=None)
+def injury_events(game_id, book_id, snapshot):
+    if not book_id:
+        return ()
+    data = download(f"{GAMEBOOKS}{book_id}.pdf", snapshot, f"{game_id}.pdf", optional=True)
+    if data is None:
+        return ()
+
+    from pypdf import PdfReader
+
+    events = []
+    quarter = 0
+    for page in PdfReader(io.BytesIO(data)).pages:
+        for line in page.extract_text(extraction_mode="layout").splitlines():
+            heading = re.search(r"Play By Play\s+(First|Second|Third|Fourth|Overtime)", line)
+            if heading:
+                quarter = QUARTERS[heading[1]]
+            if quarter:
+                for team, first, last, event in INJURY_EVENT.findall(line):
+                    events.append((BOOK_TEAMS.get(team, team), first, last, event.lower(), quarter))
+    return events
 
 
-def classify(week, player_id, player, score_verified, reviews, games, evidence):
+def name_key(name):
+    return "".join(character for character in name.casefold() if character.isalnum())
+
+
+def injury_ended_game(events, team, identity):
+    first = name_key(identity.get("football_name") or identity.get("first_name") or "")
+    last = name_key(re.sub(r"\s+(?:Jr\.?|Sr\.?|II|III|IV)$", "", identity.get("last_name") or ""))
+    team = BOOK_TEAMS.get(team, team)
+    hurt_before_half = False
+    out_before_second_half = False
+    for club, initial, surname, event, quarter in events:
+        if club != team or not first.startswith(name_key(initial)) or name_key(surname) != last:
+            continue
+        if event == "has returned to the game":
+            hurt_before_half = out_before_second_half = False
+        elif event == "is out of the game":
+            out_before_second_half |= quarter <= 2 or hurt_before_half
+        elif quarter <= 2:
+            hurt_before_half = True
+    return out_before_second_half
+
+
+def counts_as_donut(week, player_id, player, data, early_injuries, snapshot):
     if player.get("position") == "DEF":
-        return "Excluded", "D/ST is a team unit.", ""
-    review = reviews.get(f"{week}:{player_id}")
-    if review and review["status"] == "Excluded":
-        return "Excluded", review["evidence"], review["source"]
-    if not score_verified:
-        return "Uncertain", "Sleeper shows 0.00 in the lineup slot without a matching player score.", ""
-    if review:
-        return review["status"], review["evidence"], review["source"]
-
-    identities, snaps, team_totals, second_half_offense, by_player = evidence
-    gsis, pfr = identities.get(player_id, (player.get("gsis_id"), player.get("pfr_id")))
-    known_plays = by_player.get((week, gsis), {})
-    for play, source in known_plays.values():
-        if play["qtr"] in SECOND_HALF:
-            label = play["play_type"].replace("_", " ")
-            detail = f'Q{play["qtr"]} {play["time"]} {label} ({source})'
-            return "Confirmed", detail, game_link(games[play["game_id"]])
-
-    for row in snaps.get((week, pfr), []):
-        game_id, team = row["game_id"], row["team"]
-        team = "LAR" if team == "LA" else team
-        key = (game_id, team)
-        offense = int(row["offense_snaps"])
-        total = team_totals.get(key)
-        second_half = second_half_offense[key]
-        if total is not None and 0 < second_half <= total and total - second_half < offense <= total:
-            detail = f"{offense} offensive snaps. At most {total - second_half} could have been outside Q3–Q4."
-            return "Confirmed", detail, game_link(games[game_id])
-
-    rows = snaps.get((week, pfr), [])
-    if len(rows) == 1:
-        row = rows[0]
-        game_id = row["game_id"]
-        count = sum(int(row[key]) for key in ("offense_snaps", "defense_snaps", "st_snaps"))
-        first_half = sum(
-            play["qtr"] in {"1", "2"} and play["game_id"] == game_id
-            for play, source in known_plays.values()
+        return False
+    identities, snaps, played, later, books = data
+    identity = identities.get(player_id, player)
+    player_key = (week, identity.get("gsis_id"))
+    snap_games = snaps.get((week, identity.get("pfr_id")), {})
+    games_played = snap_games.keys() | played.get(player_key, set())
+    if not games_played:
+        return False
+    if later.get(player_key):
+        return True
+    if player_id in early_injuries.get(str(week), ()):
+        return False
+    return any(
+        not injury_ended_game(
+            injury_events(game_id, books.get(game_id), snapshot),
+            snap_games.get(game_id, identity.get("team")),
+            identity,
         )
-        if count > 0 and first_half == count:
-            detail = "The only recorded snap was in Q1–Q2." if count == 1 else f"All {count} recorded snaps were in Q1–Q2."
-            return "Excluded", detail, game_link(games[game_id])
-        return "Uncertain", f"{count} game snaps. Quarter of participation remains unverified.", game_link(games[game_id])
-    return "Uncertain", "No verified Q3–Q4 participation or game snap record.", ""
+        for game_id in sorted(games_played)
+    )
 
 
 def audit(snapshot):
@@ -200,9 +209,9 @@ def audit(snapshot):
     matchups, games = load_matchups(league, teams, snapshot)
     if not matchups:
         return teams, {}, []
-    evidence = load_evidence(games, snapshot)
+    appearances = load_appearances(games, snapshot)
     players = sleeper("players/nfl", snapshot)
-    reviews = json.loads((ROOT / "reviews.json").read_text(encoding="utf-8"))
+    early_injuries = json.loads((ROOT / "early_injuries.json").read_text(encoding="utf-8"))
     entries = []
     for week, rows in matchups.items():
         for row in rows:
@@ -217,9 +226,10 @@ def audit(snapshot):
                 seen.add(player_id)
                 player = players.get(player_id, {})
                 name = player.get("full_name") or player.get("last_name") or f"Player {player_id}"
-                score_verified = (row.get("players_points") or {}).get(player_id) == 0
-                status, detail, source = classify(week, player_id, player, score_verified, reviews, games, evidence)
-                entries.append((week, roster_id, name, status, detail, source))
+                if (row.get("players_points") or {}).get(player_id) == 0 and counts_as_donut(
+                    week, player_id, player, appearances, early_injuries, snapshot
+                ):
+                    entries.append((week, roster_id, name))
     return teams, matchups, entries
 
 
@@ -227,114 +237,68 @@ def cell(value):
     return html.escape(str(value).replace("\n", " ").replace("\r", " "), quote=False).replace("|", "&#124;").replace("[", "&#91;").replace("]", "&#93;")
 
 
-def standings(teams, entries):
-    counts = Counter(row[1] for row in entries if row[3] == "Confirmed")
-    pending = Counter(row[1] for row in entries if row[3] == "Uncertain")
+def standings(teams, matchups, entries):
+    by_week = defaultdict(list)
+    counts = Counter()
+    for week, roster, player in entries:
+        by_week[roster, week].append(player)
+        counts[roster] += 1
+
+    weeks = sorted(matchups)
     team_order = sorted(teams, key=lambda roster: (-counts[roster], teams[roster].casefold(), roster))
     rows = []
     for position, roster in enumerate(team_order, 1):
         if position == 1 or counts[roster] != counts[team_order[position - 2]]:
             rank = position
-        rows.append((rank, teams[roster], counts[roster], pending[roster]))
-    return rows
+        weekly = [sorted(by_week[roster, week], key=str.casefold) for week in weeks]
+        rows.append((rank, teams[roster], counts[roster], weekly))
+    return weeks, rows
 
 
-def render(teams, matchups, entries):
-    ranks = standings(teams, entries)
-    last_week = max(matchups, default=0)
+def render(weeks, standings, total):
+    coverage = f"Through Week {weeks[-1]}" if weeks else "Waiting for Week 1"
+    headings = ["Rank", "Fantasy team", "Donuts", *(f"W{week}" for week in weeks)]
     report = [
         "# CTESPN Dynasty Donut Tracker",
         "",
-        f"**{SEASON} season · Through Week {last_week}**" if last_week else f"**{SEASON} season · Waiting for Week 1**",
+        "[Open the Donut Tracker](https://braundbj.github.io/CTESPN-Dynasty-Donut-Tracker/)",
         "",
-        f"**{sum(row[2] for row in ranks)} confirmed starts** · **{sum(row[3] for row in ranks)} to verify**",
+        f"**{SEASON} season · {coverage} · {total} donuts**",
         "",
-        "## Leaderboard",
-        "",
-        "| Rank | Fantasy team | Confirmed starts | To verify |",
-        "| ---: | --- | ---: | ---: |",
+        "| " + " | ".join(headings) + " |",
+        "| " + " | ".join(["---:", "---", "---:", *["---"] * len(weeks)]) + " |",
     ]
-    for rank, team, confirmed, pending in ranks:
-        report.append(f"| {rank} | {cell(team)} | {confirmed} | {pending} |")
-    report.extend(["", "## Weekly log", "", "| Week | Confirmed | To verify | Excluded |", "| ---: | ---: | ---: | ---: |"])
-    totals = Counter((row[0], row[3]) for row in entries)
-    for week in matchups:
-        report.append(f"| {week} | {totals[week, 'Confirmed']} | {totals[week, 'Uncertain']} | {totals[week, 'Excluded']} |")
-    for status, heading in (("Confirmed", "Confirmed starts"), ("Uncertain", "Cases to verify"), ("Excluded", "Reviewed exclusions")):
-        report.extend(["", f"### {heading}", ""])
-        selected = [row for row in entries if row[3] == status]
-        if not selected:
-            report.append("None.")
-            continue
-        report.extend(["| Week | Fantasy team | Player | Evidence |", "| ---: | --- | --- | --- |"])
-        for week, roster, name, _, detail, source in selected:
-            citation = f" [Source]({source})" if source else ""
-            report.append(f"| {week} | {cell(teams[roster])} | {cell(name)} | {cell(detail)}{citation} |")
-    report.extend([
-        "",
-        "## How the tracker works",
-        "",
-        "Each entry is one individual starter with exactly 0.00 points in both Sleeper scoring fields and evidence of a Q3 or Q4 snap. Special-teams plays count. Overtime, empty slots, and team D/ST slots are excluded. Ranks reflect confirmed entries and ties share a rank.",
-        "",
-        "Confirmation comes from an identified play, on-field charting when available, or a snap total that exceeds the maximum possible outside Q3–Q4. A full-game snap count alone can leave a case open. Sourced manual decisions are in `reviews.json`, keyed by week and Sleeper player ID.",
-        "",
-        "GitHub Actions checks daily for completed weeks and stat corrections. Run **Refresh leaderboard** from the Actions tab to refresh on demand. For a local copy of the website, run `python3 tracker.py --site web` with Python 3.9 or later and open `web/index.html` in your browser.",
-        "",
-        "Sources: [Sleeper](https://docs.sleeper.com/), [nflverse play-by-play](https://nflreadr.nflverse.com/reference/load_pbp.html), [Pro Football Reference snap counts via nflverse](https://nflreadr.nflverse.com/reference/load_snap_counts.html), and [FTN Data on-field charting via nflverse](https://nflreadr.nflverse.com/reference/load_participation.html) ([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)).",
-        "",
-    ])
-    return "\n".join(report)
+    for rank, team, count, weekly in standings:
+        row = [str(rank), cell(team), str(count), *[", ".join(map(cell, players)) or "—" for players in weekly]]
+        report.append("| " + " | ".join(row) + " |")
+    return "\n".join(report) + "\n"
 
 
-def render_page(teams, matchups, entries):
-    ranks = standings(teams, entries)
+def render_page(weeks, standings, total):
     escape = html.escape
-    leaderboard = []
-    for rank, team, confirmed, pending in ranks:
-        leader = ' class="leader"' if rank == 1 and confirmed else ""
-        leaderboard.append(
-            f'<tr{leader}><td>{rank:02d}</td><th scope="row">{escape(team)}</th>'
-            f'<td class="score">{confirmed}</td><td>{pending}</td></tr>'
-        )
-
-    def evidence_list(rows, empty, show_week=False):
-        if not rows:
-            return f'<p class="empty">{empty}</p>'
-        items = []
-        for week, roster, player, _, detail, source in rows:
-            team = escape(teams[roster])
-            label = f"Week {week} · {team}" if show_week else team
-            link = f' <a href="{escape(source, quote=True)}">Source</a>' if source else ""
-            items.append(
-                f'<li><strong>{escape(player)}</strong><span>{label}</span>'
-                f'<p>{escape(detail)}{link}</p></li>'
-            )
-        return '<ul class="plays">' + "".join(items) + "</ul>"
-
-    last_week = max(matchups, default=0)
-    weekly = []
-    for week in sorted(matchups, reverse=True):
-        rows = [row for row in entries if row[0] == week]
-        confirmed = [row for row in rows if row[3] == "Confirmed"]
-        count = Counter(row[3] for row in rows)
-        expanded = " open" if week == last_week else ""
-        weekly.append(
-            f'<details{expanded}><summary><strong>Week {week}</strong> '
-            f'<span>{count["Confirmed"]} confirmed · {count["Uncertain"]} to verify</span></summary>'
-            f'{evidence_list(confirmed, "No confirmed starts this week.")}</details>'
-        )
+    table_rows = []
+    for rank, team, count, weekly in standings:
+        leader = ' class="leader"' if rank == 1 and count else ""
+        cells = [
+            f'<th scope="row"><span class="rank" aria-label="Rank {rank}">{rank:02d}</span> {escape(team)}</th>',
+            f'<td class="score">{count}</td>',
+        ]
+        for players in weekly:
+            if players:
+                names = "".join(f"<li>{escape(name)}</li>" for name in players)
+                cells.append(f'<td class="has-donut"><ul>{names}</ul></td>')
+            else:
+                cells.append('<td class="no-donut">—</td>')
+        table_rows.append(f"<tr{leader}>" + "".join(cells) + "</tr>")
 
     template = Template((ROOT / "leaderboard.html.template").read_text(encoding="utf-8"))
     return template.substitute(
         season=SEASON,
-        coverage=f"Through Week {last_week}" if last_week else "Waiting for Week 1",
-        total=sum(row[2] for row in ranks),
-        pending=sum(row[3] for row in ranks),
-        teams=len(teams),
-        leaderboard="\n".join(leaderboard),
-        weekly="\n".join(weekly) or '<p class="empty">No completed weeks yet.</p>',
-        uncertain=evidence_list([row for row in entries if row[3] == "Uncertain"], "No cases to verify.", True),
-        excluded=evidence_list([row for row in entries if row[3] == "Excluded"], "No exclusions.", True),
+        coverage=f"Through Week {weeks[-1]}" if weeks else "Waiting for Week 1",
+        total=total,
+        teams=len(standings),
+        week_headers="".join(f'<th scope="col">Week {week}</th>' for week in weeks),
+        leaderboard="\n".join(table_rows),
     )
 
 
@@ -344,11 +308,11 @@ if __name__ == "__main__":
     parser.add_argument("--site", type=Path, help="Write the standalone web leaderboard to this directory.")
     args = parser.parse_args()
     teams, matchups, entries = audit(args.snapshot)
-    entries.sort(key=lambda row: (row[0], teams[row[1]].casefold(), row[2]))
-    report = render(teams, matchups, entries)
+    weeks, rows = standings(teams, matchups, entries)
+    report = render(weeks, rows, len(entries))
     if args.site:
         args.site.mkdir(parents=True, exist_ok=True)
-        (args.site / "index.html").write_text(render_page(teams, matchups, entries), encoding="utf-8")
+        (args.site / "index.html").write_text(render_page(weeks, rows, len(entries)), encoding="utf-8")
     temporary = ROOT / "README.md.tmp"
     temporary.write_text(report, encoding="utf-8")
     temporary.replace(ROOT / "README.md")

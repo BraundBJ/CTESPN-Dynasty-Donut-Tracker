@@ -7,7 +7,7 @@ on:
   push:
     paths:
       - 'tracker.py'
-      - 'reviews.json'
+      - 'early_injuries.json'
       - 'leaderboard.html.template'
       - 'web/index.html'
       - '.github/workflows/refresh.yml'
@@ -28,7 +28,11 @@ jobs:
       publish: ${{ steps.pages.outputs.publish }}
     steps:
       - uses: actions/checkout@v6
+      - name: Install game-book reader
+        run: python3 -m pip install --target "$RUNNER_TEMP/python" pypdf==6.21.4
       - name: Check completed weeks
+        env:
+          PYTHONPATH: ${{ runner.temp }}/python
         run: python3 tracker.py --site web
       - name: Save changes
         run: |
