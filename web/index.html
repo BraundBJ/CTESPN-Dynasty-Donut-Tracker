@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#151219">
   <title>CTESPN Dynasty Donut Tracker</title>
+  <script>
+    try {
+      if (sessionStorage.getItem("ctespn-access") === "granted") {
+        document.documentElement.classList.add("access-granted");
+      }
+    } catch (error) {}
+  </script>
   <style>
     :root {
       color-scheme: dark;
@@ -22,7 +29,27 @@
     }
     * { box-sizing: border-box; }
     body, h1, h2, p { margin: 0; }
+    html:not(.access-granted) header, html:not(.access-granted) main { display: none; }
+    html.access-granted .access-gate { display: none; }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: .25rem; }
+    .access-gate {
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+      background:
+        radial-gradient(circle at 50% 18%, #643b4666 0 8%, transparent 30%),
+        radial-gradient(circle at 50% 110%, #482635 0, transparent 48%),
+        var(--canvas);
+    }
+    .access-card { width: min(100%, 28rem); padding: clamp(1.25rem, 5vw, 2rem); border: 1px solid var(--line); border-radius: 1rem; background: #201b26e8; box-shadow: 0 1.5rem 4rem #09070bb3; text-align: center; }
+    .access-donut { width: 5.25rem; height: auto; margin-bottom: .75rem; transform: rotate(-12deg); filter: drop-shadow(0 .7rem 1rem #080609a6); }
+    .access-card h1 { margin: 0; font-size: clamp(2rem, 10vw, 3.3rem); }
+    .access-card form { display: grid; grid-template-columns: 1fr auto; gap: .5rem; margin-top: 1.35rem; }
+    .access-card input, .access-card button { min-height: 3rem; border: 1px solid var(--line); border-radius: .55rem; color: var(--ink); font: inherit; }
+    .access-card input { min-width: 0; padding: .65rem .75rem; background: var(--surface-raised); }
+    .access-card button { padding: .65rem 1rem; background: var(--accent); color: var(--canvas); font-weight: 800; cursor: pointer; }
+    .access-error { min-height: 1.5rem; margin-top: .6rem; color: var(--danger); font-weight: 700; }
     .wrap { width: min(86rem, calc(100% - 3rem)); margin-inline: auto; }
     header { background: var(--surface); border-bottom: 1px solid var(--line); }
     .brand { padding: 1rem 0; border-bottom: 1px solid var(--line); color: var(--accent); font-weight: 750; }
@@ -38,11 +65,36 @@
     h2 { font-size: 1.55rem; letter-spacing: -.03em; }
     [hidden] { display: none !important; }
     .podium {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
       margin-bottom: 1.75rem;
-      padding: .95rem clamp(.55rem, 3vw, 2rem) 1.25rem;
+      padding: 1rem clamp(.55rem, 3vw, 2rem) 1.7rem;
       border: 1px solid var(--line);
       border-radius: .9rem;
-      background: radial-gradient(ellipse at 50% 40%, #402b2b 0%, #241d29 48%, #1c1721 82%);
+      background:
+        radial-gradient(ellipse at 50% 35%, #8c573550 0 12%, transparent 42%),
+        linear-gradient(115deg, transparent 0 27%, #f4bd5712 27% 28%, transparent 28% 72%, #f4bd5712 72% 73%, transparent 73%),
+        linear-gradient(#271d2e, #17131c);
+      box-shadow: inset 0 1px #ffffff14, 0 .7rem 1.8rem #0a080c80;
+    }
+    .podium::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: -35% 15% 38%;
+      background: conic-gradient(from 165deg at 50% 0%, transparent 0 34%, #f9cb6945 40%, transparent 46% 54%, #f9cb6945 60%, transparent 66%);
+      filter: blur(.25rem);
+    }
+    .podium::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      left: 8%; right: 8%; bottom: .65rem;
+      height: 1.2rem;
+      border-radius: 50%;
+      background: #09070bbb;
+      filter: blur(.45rem);
     }
     .podium h2 { color: var(--accent); font: 750 .8rem ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; }
     .podium-steps {
@@ -52,19 +104,21 @@
       gap: clamp(.25rem, 1vw, .7rem);
       width: min(100%, 36rem);
       margin: 0 auto;
-      padding-bottom: .35rem;
-      border-bottom: 2px solid #58404b;
+      padding: 1rem 0 .35rem;
+      border-bottom: 3px solid #705141;
     }
-    .podium-place { grid-row: 1; min-width: 0; text-align: center; }
+    .podium-place { position: relative; grid-row: 1; min-width: 0; text-align: center; }
     .place-1 { grid-column: 2; --medal: #ffdf9b; --metal-top: #694923; --metal-base: #2b1d18; --medal-edge: #a77537; --step-height: 5.55rem; }
     .place-2 { grid-column: 1; --medal: #e8e2ff; --metal-top: #4c4561; --metal-base: #272235; --medal-edge: #746989; --step-height: 4.65rem; }
     .place-3 { grid-column: 3; --medal: #ffceb8; --metal-top: #604039; --metal-base: #302027; --medal-edge: #8e6257; --step-height: 3.95rem; }
-    .podium-name, .podium-tie { margin: 0 0 .45rem; font-size: clamp(.76rem, 2.3vw, .95rem); font-weight: 750; overflow-wrap: anywhere; }
-    .place-1 .podium-name { color: var(--medal); }
+    .podium-name, .podium-tie { margin: 0 auto .55rem; font-size: clamp(.76rem, 2.3vw, .95rem); font-weight: 800; overflow-wrap: anywhere; }
+    .place-1 .podium-name { width: fit-content; padding: .22rem .55rem; border: 1px solid #c38b3e; border-radius: 999px; background: #372518; color: var(--medal); box-shadow: 0 0 1rem #f5b74d3d; }
     .podium-tie summary { min-height: 2rem; padding: .4rem .1rem; cursor: pointer; }
     .podium-tie ul { padding: 0; margin: .25rem 0 .55rem; list-style: none; font-weight: 400; }
     .podium-tie li + li { margin-top: .3rem; }
     .podium-step {
+      position: relative;
+      overflow: hidden;
       display: grid;
       align-content: center;
       gap: .12rem;
@@ -78,9 +132,19 @@
       box-shadow: inset 0 3px #ffffff18, inset 0 -4px #0000003d, 0 6px 12px #100c13;
       color: var(--medal);
     }
+    .podium-step::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(105deg, transparent 45%, #ffffff1c 50%, transparent 56%); transform: translateX(-110%); }
+    .place-1 .podium-step { box-shadow: inset 0 3px #ffffff2e, inset 0 -4px #00000050, 0 0 1.5rem #f0ad4254, 0 8px 14px #100c13; }
+    .place-1 .podium-step::after { content: "CHAMPION"; position: absolute; left: 50%; bottom: .45rem; transform: translateX(-50%); color: #ffde98; font: 800 .55rem ui-monospace, monospace; letter-spacing: .16em; }
     .podium-step strong { font: 850 clamp(1.25rem, 4vw, 2rem)/1 ui-monospace, monospace; }
     .podium-step span { color: var(--medal); font-size: .72rem; font-weight: 650; }
-    .trophy { display: block; width: clamp(3.1rem, 12vw, 4.6rem); height: auto; margin: 0 auto .2rem; filter: drop-shadow(0 0 .7rem #edaa4d60); }
+    .place-1 .podium-step span { padding-bottom: .9rem; }
+    .trophy { display: block; width: clamp(4.2rem, 15vw, 5.8rem); height: auto; margin: 0 auto .15rem; filter: drop-shadow(0 0 1rem #edaa4d88); }
+    @media (prefers-reduced-motion: no-preference) {
+      .trophy { animation: trophy-float 3s ease-in-out infinite; }
+      .podium-step::before { animation: podium-shine 4.5s ease-in-out infinite; }
+      @keyframes trophy-float { 50% { transform: translateY(-.3rem) rotate(2deg); } }
+      @keyframes podium-shine { 0%, 62% { transform: translateX(-110%); } 85%, 100% { transform: translateX(110%); } }
+    }
     #grid-view { margin-top: .65rem; }
     .view-controls { display: inline-flex; gap: .25rem; margin: .65rem 0; padding: .25rem; border: 1px solid var(--line); border-radius: .65rem; background: var(--surface); }
     .view-controls button, .week-step, .browse select {
@@ -164,10 +228,26 @@
       tr > :first-child { min-width: 9.25rem; max-width: 9.25rem; }
       .section-heading { align-items: flex-start; }
       .collection-link { flex: 0 0 auto; }
+      .access-card form { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
+  <div class="access-gate" id="access-gate">
+    <div class="access-card">
+      <svg class="access-donut" viewBox="0 0 160 160" aria-hidden="true">
+        <circle cx="80" cy="80" r="51" fill="none" stroke="#d58d54" stroke-width="42"/>
+        <circle cx="80" cy="75" r="49" fill="none" stroke="#ffadbc" stroke-width="36"/>
+        <path d="M43 42l9 4m24-20 4 10m28 0-6 8m26 9 8-3m-7 33 10 4m-20 25 7 6m-37 0 2 10m-29-13-8 5m-15-23-9-2m3-24-10-4" stroke="#752646" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <h1>CTESPN Dynasty</h1>
+      <form id="access-form">
+        <input id="access-password" type="password" autocomplete="current-password" aria-label="Access password" placeholder="Password" required>
+        <button type="submit">Enter</button>
+      </form>
+      <p class="access-error" id="access-error" role="alert" aria-live="polite"></p>
+    </div>
+  </div>
   <header>
     <div class="wrap">
       <p class="brand">CTESPN Dynasty</p>
@@ -196,7 +276,7 @@
 <div class="podium-place place-3"><details class="podium-tie"><summary>4 teams tied</summary><ul><li>Aw, Shoughs</li><li>Decatur Staleys</li><li>Naberhood Watch</li><li>Price is Right</li></ul></details><div class="podium-step"><strong>3rd</strong><span>2 donuts</span></div></div></div>
     </section>
     <section id="leaderboard" aria-labelledby="leaderboard-title">
-      <h2 id="leaderboard-title">Weekly leaderboard</h2>
+      <h2 id="leaderboard-title" tabindex="-1">Weekly leaderboard</h2>
       <div class="view-controls" id="view-controls" role="group" aria-label="Leaderboard view" hidden>
         <button type="button" data-view="week" aria-pressed="false">By week</button>
         <button type="button" data-view="team" aria-pressed="false">By team</button>
@@ -248,6 +328,27 @@
     </section>
   </main>
   <script>
+    (() => {
+      const expected = "db6c8fcd6ee8f25d13eb4ec642896db4acd6f520412747e095168d1594002e53";
+      const form = document.querySelector("#access-form");
+      const password = document.querySelector("#access-password");
+      const error = document.querySelector("#access-error");
+      const toHex = bytes => Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password.value));
+        if (toHex(new Uint8Array(digest)) === expected) {
+          try { sessionStorage.setItem("ctespn-access", "granted"); } catch (storageError) {}
+          document.documentElement.classList.add("access-granted");
+          password.value = "";
+          error.textContent = "";
+          document.querySelector("#leaderboard-title").focus({ preventScroll: true });
+        } else {
+          error.textContent = "Wrong password";
+          password.select();
+        }
+      });
+    })();
     (() => {
       const table = document.querySelector("#weekly-log table");
       const weeks = Array.from(table.tHead.rows[0].cells).slice(2).map(cell => cell.textContent);
