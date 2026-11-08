@@ -1,0 +1,38 @@
+name: Refresh leaderboard
+
+on:
+  schedule:
+    - cron: '17 17 * * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tracker.py'
+      - 'reviews.json'
+      - '.github/workflows/refresh.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: leaderboard-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check completed weeks
+        run: python3 tracker.py
+      - name: Save changes
+        run: |
+          if git diff --quiet -- README.md; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Refresh zero-point starter leaderboard"
+          git push
