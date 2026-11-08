@@ -15,6 +15,7 @@
       --ink: #fbf3fa;
       --muted: #c4b2c8;
       --accent: #ffadbc;
+      --danger: #ff647c;
       background: var(--canvas);
       color: var(--ink);
       font: 16px/1.5 system-ui, sans-serif;
@@ -123,12 +124,46 @@
     .has-donut { background: #352638; }
     .has-donut ul { list-style: none; margin: 0; padding: 0; }
     .has-donut li + li { margin-top: .35rem; padding-top: .35rem; border-top: 1px solid var(--line); }
+    .video-overdue .team-name, .video-missing { color: var(--danger); }
+    #videos { margin-top: 2.4rem; padding-top: 1.6rem; border-top: 1px solid var(--line); }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .collection-link, .video-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.5rem;
+      padding: .4rem .75rem;
+      border: 1px solid var(--line);
+      border-radius: .5rem;
+      background: var(--surface-raised);
+      color: var(--ink);
+      font-weight: 750;
+      text-decoration: none;
+    }
+    .video-metrics { display: flex; flex-wrap: wrap; gap: .65rem; margin: .9rem 0; }
+    .video-metrics > div { display: flex; align-items: baseline; gap: .55rem; padding: .45rem .75rem; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface); }
+    .video-metrics strong { color: var(--accent); font-size: 1.2rem; }
+    .video-metrics span { color: var(--muted); font-size: .85rem; }
+    .video-missing-metric strong { color: var(--danger); }
+    .video-log { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .65rem; margin: 0; padding: 0; list-style: none; }
+    .video-card { display: grid; grid-template-columns: 1fr auto; gap: .1rem .75rem; align-items: center; min-width: 0; padding: .8rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); }
+    .video-card strong, .video-team { min-width: 0; overflow-wrap: anywhere; }
+    .video-card strong { grid-column: 1; }
+    .video-week { grid-column: 1; color: var(--muted); font: 700 .72rem ui-monospace, monospace; text-transform: uppercase; }
+    .video-team { grid-column: 1; color: var(--muted); font-size: .82rem; }
+    .video-status { grid-column: 2; grid-row: 1 / span 3; min-width: 4.75rem; min-height: 2.35rem; font-size: .82rem; }
+    .video-missing-card { border-color: #843143; background: #2c1b24; }
+    .video-missing-card strong, .video-status-missing { color: var(--danger); }
+    .video-status-missing { border-color: #843143; background: #421f2b; }
+    .video-special-card { border-style: dashed; }
     @media (max-width: 36rem) {
       .wrap { width: calc(100% - 1.5rem); }
       .hero { padding-block: 1.7rem; }
       .donut { margin-right: 0; }
       th, td { padding: .55rem .55rem; }
       tr > :first-child { min-width: 9.25rem; max-width: 9.25rem; }
+      .section-heading { align-items: flex-start; }
+      .collection-link { flex: 0 0 auto; }
     }
   </style>
 </head>
@@ -187,21 +222,29 @@
         <div class="table-wrap" id="weekly-log" tabindex="0" role="region" aria-labelledby="leaderboard-title">
           <table aria-label="Donuts by fantasy team and week">
             <thead><tr><th scope="col">Fantasy team</th><th scope="col" class="total-heading">Total</th><th scope="col">Week 1</th><th scope="col">Week 2</th><th scope="col">Week 3</th><th scope="col">Week 4</th><th scope="col">Week 5</th><th scope="col">Week 6</th><th scope="col">Week 7</th><th scope="col">Week 8</th></tr></thead>
-            <tbody><tr class="leader"><th scope="row"><span class="rank" aria-label="Rank 1">01</span> <span class="team-name">White Bower(s)</span></th><td class="score">4</td><td class="has-donut"><ul><li>Jordan Addison</li><li>Romeo Doubs</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li>Oronde Gadsden</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Emanuel Wilson</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 2">02</span> <span class="team-name">Benjamin Jeantanyahu</span></th><td class="score">3</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Cam Skattebo</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li>Omar Cooper Jr.</li><li>Zay Flowers</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Aw, Shoughs</span></th><td class="score">2</td><td class="has-donut"><ul><li>Colston Loveland</li><li>Kyle Pitts Sr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Decatur Staleys</span></th><td class="score">2</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Jake Bates</li><li>Juwan Johnson</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Naberhood Watch</span></th><td class="score">2</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Marvin Harrison Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Tre Tucker</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Price is Right</span></th><td class="score">2</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Jake Ferguson</li></ul></td><td class="has-donut"><ul><li>Cade Otton</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">LEASTIMNOTDRINKINGBRIAN</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Will Reichard</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">Quinshon Judkins Fan Club</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Kenyon Sadiq</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">The Tetless Offensive</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Brian Thomas Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+            <tbody><tr class="leader"><th scope="row"><span class="rank" aria-label="Rank 1">01</span> <span class="team-name">White Bower(s)</span></th><td class="score">4</td><td class="has-donut"><ul><li data-player="Jordan Addison">Jordan Addison</li><li data-player="Romeo Doubs">Romeo Doubs</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Oronde Gadsden">Oronde Gadsden</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Emanuel Wilson">Emanuel Wilson</li></ul></td></tr>
+<tr class="video-overdue"><th scope="row"><span class="rank" aria-label="Rank 2">02</span> <span class="team-name">Benjamin Jeantanyahu</span></th><td class="score">3</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Cam Skattebo">Cam Skattebo</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Omar Cooper Jr." class="video-missing" title="Video missing">Omar Cooper Jr.</li><li data-player="Zay Flowers" class="video-missing" title="Video missing">Zay Flowers</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Aw, Shoughs</span></th><td class="score">2</td><td class="has-donut"><ul><li data-player="Colston Loveland">Colston Loveland</li><li data-player="Kyle Pitts Sr.">Kyle Pitts Sr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr class="video-overdue"><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Decatur Staleys</span></th><td class="score">2</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Jake Bates" class="video-missing" title="Video missing">Jake Bates</li><li data-player="Juwan Johnson" class="video-missing" title="Video missing">Juwan Johnson</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Naberhood Watch</span></th><td class="score">2</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Marvin Harrison Jr.">Marvin Harrison Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Tre Tucker">Tre Tucker</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Price is Right</span></th><td class="score">2</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Jake Ferguson">Jake Ferguson</li></ul></td><td class="has-donut"><ul><li data-player="Cade Otton">Cade Otton</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">LEASTIMNOTDRINKINGBRIAN</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Will Reichard">Will Reichard</li></ul></td></tr>
+<tr class="video-overdue"><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">Quinshon Judkins Fan Club</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Kenyon Sadiq" class="video-missing" title="Video missing">Kenyon Sadiq</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">The Tetless Offensive</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li data-player="Brian Thomas Jr.">Brian Thomas Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
 <tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> <span class="team-name">Captain Jahmyrica</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
 <tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> <span class="team-name">Love Air Jordyn</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
 <tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> <span class="team-name">Steve</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr></tbody>
           </table>
         </div>
       </div>
+    </section>
+    <section id="videos" aria-labelledby="videos-title">
+      <div class="section-heading">
+        <h2 id="videos-title">Video log</h2>
+        <a class="collection-link" href="https://share.icloud.com/photos/0cdkfK19ozO8m--LMgDqCaXOA" target="_blank" rel="noopener">All videos</a>
+      </div>
+      <div class="video-metrics"><div><strong>14</strong><span>Submitted</span></div><div class="video-missing-metric"><strong>5</strong><span>Missing</span></div></div>
+      <ul class="video-log"><li class="video-card video-missing-card"><span class="video-week">Week 8</span><strong>Omar Cooper Jr.</strong><span class="video-team">Benjamin Jeantanyahu</span><span class="video-status video-status-missing">Missing</span></li><li class="video-card video-missing-card"><span class="video-week">Week 8</span><strong>Zay Flowers</strong><span class="video-team">Benjamin Jeantanyahu</span><span class="video-status video-status-missing">Missing</span></li><li class="video-card"><span class="video-week">Week 8</span><strong>Will Reichard</strong><span class="video-team">LEASTIMNOTDRINKINGBRIAN</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,7E706717-4647-4F99-B572-3BA7B6189C27,14/" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 8</span><strong>Tre Tucker</strong><span class="video-team">Naberhood Watch</span><a class="video-status" href="videos/tre-tucker.mp4" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 8</span><strong>Cade Otton</strong><span class="video-team">Price is Right</span><a class="video-status" href="https://share.icloud.com/photos/0cdkfK19ozO8m--LMgDqCaXOA" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 8</span><strong>Emanuel Wilson</strong><span class="video-team">White Bower(s)</span><a class="video-status" href="https://share.icloud.com/photos/0cdkfK19ozO8m--LMgDqCaXOA" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 7</span><strong>Jake Ferguson</strong><span class="video-team">Price is Right</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,4CF53726-6061-4F96-8EE8-A7263321AA16,13/" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 6</span><strong>Cam Skattebo</strong><span class="video-team">Benjamin Jeantanyahu</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,6214D465-13B5-4834-B273-2DB446F1D212,11/" target="_blank" rel="noopener">Watch</a></li><li class="video-card video-missing-card"><span class="video-week">Week 6</span><strong>Jake Bates</strong><span class="video-team">Decatur Staleys</span><span class="video-status video-status-missing">Missing</span></li><li class="video-card video-missing-card"><span class="video-week">Week 6</span><strong>Juwan Johnson</strong><span class="video-team">Decatur Staleys</span><span class="video-status video-status-missing">Missing</span></li><li class="video-card video-special-card"><span class="video-week">Week 6</span><strong>Evan McPherson</strong><span class="video-team">Love Air Jordyn</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,171BF688-E291-4CCA-B950-66BC7BFCB1A5,9/" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 5</span><strong>Brian Thomas Jr.</strong><span class="video-team">The Tetless Offensive</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,8E481675-A89B-4B9B-9AE0-79A32D63BA78,10/" target="_blank" rel="noopener">Watch</a></li><li class="video-card video-missing-card"><span class="video-week">Week 4</span><strong>Kenyon Sadiq</strong><span class="video-team">Quinshon Judkins Fan Club</span><span class="video-status video-status-missing">Missing</span></li><li class="video-card"><span class="video-week">Week 3</span><strong>Oronde Gadsden</strong><span class="video-team">White Bower(s)</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,DFBA0481-C9D2-42FF-9239-1BA65158D291,5/" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 2</span><strong>Marvin Harrison Jr.</strong><span class="video-team">Naberhood Watch</span><a class="video-status" href="https://share.icloud.com/photos/0cdkfK19ozO8m--LMgDqCaXOA" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 1</span><strong>Colston Loveland</strong><span class="video-team">Aw, Shoughs</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,B5A3EB03-EE54-4C44-96E8-C472BDD21692,0/" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 1</span><strong>Kyle Pitts Sr.</strong><span class="video-team">Aw, Shoughs</span><a class="video-status" href="https://share.icloud.com/photos/0cdkfK19ozO8m--LMgDqCaXOA" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 1</span><strong>Jordan Addison</strong><span class="video-team">White Bower(s)</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,4F80C873-0013-4483-8B42-A3A6935CB2DC,3/" target="_blank" rel="noopener">Watch</a></li><li class="video-card"><span class="video-week">Week 1</span><strong>Romeo Doubs</strong><span class="video-team">White Bower(s)</span><a class="video-status" href="https://www.icloud.com/photos/#/icloudlinks/0cdkfK19ozO8m--LMgDqCaXOA/i,38221AAB-BC7F-418C-B353-74E5F801DEF4,2/" target="_blank" rel="noopener">Watch</a></li></ul>
     </section>
   </main>
   <script>
@@ -212,7 +255,10 @@
         name: row.querySelector(".team-name").textContent,
         total: Number(row.cells[1].textContent),
         weeks: Array.from(row.cells).slice(2).map(cell =>
-          Array.from(cell.querySelectorAll("li"), player => player.textContent)
+          Array.from(cell.querySelectorAll("li"), player => ({
+            name: player.dataset.player || player.textContent,
+            missing: player.classList.contains("video-missing"),
+          }))
         ),
       }));
       if (!weeks.length || !teams.length) return;
@@ -243,14 +289,16 @@
 
       function showResults(cards, title) {
         summary.textContent = title;
-        results.replaceChildren(...cards.map(({ heading, players }) => {
+        results.replaceChildren(...cards.map(({ heading, players, missing }) => {
           const card = document.createElement("li");
           const label = document.createElement("strong");
           label.textContent = heading;
+          if (missing) label.className = "video-missing";
           card.append(label);
-          for (const player of players.length ? players : ["No donuts"]) {
+          for (const player of players.length ? players : [{ name: "No donuts", missing: false }]) {
             const name = document.createElement("span");
-            name.textContent = player;
+            name.textContent = player.name;
+            if (player.missing) name.className = "video-missing";
             if (!players.length) name.className = "empty-week";
             card.append(name);
           }
@@ -272,13 +320,21 @@
           next.disabled = week === weeks.length - 1;
           const cards = teams
             .filter(team => team.weeks[week].length)
-            .map(team => ({ heading: team.name, players: team.weeks[week] }));
+            .map(team => ({
+              heading: team.name,
+              players: team.weeks[week],
+              missing: team.weeks[week].some(player => player.missing),
+            }));
           const count = cards.reduce((total, card) => total + card.players.length, 0);
           showResults(cards, weeks[week] + " · " + countLabel(count));
         } else if (mode === "team") {
           const team = teams[teamSelect.selectedIndex];
           const cards = weeks
-            .map((week, index) => ({ heading: week, players: team.weeks[index] }))
+            .map((week, index) => ({
+              heading: week,
+              players: team.weeks[index],
+              missing: team.weeks[index].some(player => player.missing),
+            }))
             .reverse();
           showResults(cards, team.name + " · " + countLabel(team.total));
         }

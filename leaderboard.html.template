@@ -15,6 +15,7 @@
       --ink: #fbf3fa;
       --muted: #c4b2c8;
       --accent: #ffadbc;
+      --danger: #ff647c;
       background: var(--canvas);
       color: var(--ink);
       font: 16px/1.5 system-ui, sans-serif;
@@ -123,12 +124,46 @@
     .has-donut { background: #352638; }
     .has-donut ul { list-style: none; margin: 0; padding: 0; }
     .has-donut li + li { margin-top: .35rem; padding-top: .35rem; border-top: 1px solid var(--line); }
+    .video-overdue .team-name, .video-missing { color: var(--danger); }
+    #videos { margin-top: 2.4rem; padding-top: 1.6rem; border-top: 1px solid var(--line); }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .collection-link, .video-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.5rem;
+      padding: .4rem .75rem;
+      border: 1px solid var(--line);
+      border-radius: .5rem;
+      background: var(--surface-raised);
+      color: var(--ink);
+      font-weight: 750;
+      text-decoration: none;
+    }
+    .video-metrics { display: flex; flex-wrap: wrap; gap: .65rem; margin: .9rem 0; }
+    .video-metrics > div { display: flex; align-items: baseline; gap: .55rem; padding: .45rem .75rem; border: 1px solid var(--line); border-radius: .6rem; background: var(--surface); }
+    .video-metrics strong { color: var(--accent); font-size: 1.2rem; }
+    .video-metrics span { color: var(--muted); font-size: .85rem; }
+    .video-missing-metric strong { color: var(--danger); }
+    .video-log { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .65rem; margin: 0; padding: 0; list-style: none; }
+    .video-card { display: grid; grid-template-columns: 1fr auto; gap: .1rem .75rem; align-items: center; min-width: 0; padding: .8rem; border: 1px solid var(--line); border-radius: .7rem; background: var(--surface); }
+    .video-card strong, .video-team { min-width: 0; overflow-wrap: anywhere; }
+    .video-card strong { grid-column: 1; }
+    .video-week { grid-column: 1; color: var(--muted); font: 700 .72rem ui-monospace, monospace; text-transform: uppercase; }
+    .video-team { grid-column: 1; color: var(--muted); font-size: .82rem; }
+    .video-status { grid-column: 2; grid-row: 1 / span 3; min-width: 4.75rem; min-height: 2.35rem; font-size: .82rem; }
+    .video-missing-card { border-color: #843143; background: #2c1b24; }
+    .video-missing-card strong, .video-status-missing { color: var(--danger); }
+    .video-status-missing { border-color: #843143; background: #421f2b; }
+    .video-special-card { border-style: dashed; }
     @media (max-width: 36rem) {
       .wrap { width: calc(100% - 1.5rem); }
       .hero { padding-block: 1.7rem; }
       .donut { margin-right: 0; }
       th, td { padding: .55rem .55rem; }
       tr > :first-child { min-width: 9.25rem; max-width: 9.25rem; }
+      .section-heading { align-items: flex-start; }
+      .collection-link { flex: 0 0 auto; }
     }
   </style>
 </head>
@@ -190,6 +225,14 @@
         </div>
       </div>
     </section>
+    <section id="videos" aria-labelledby="videos-title">
+      <div class="section-heading">
+        <h2 id="videos-title">Video log</h2>
+        $video_collection
+      </div>
+      <div class="video-metrics">$video_metrics</div>
+      <ul class="video-log">$video_log</ul>
+    </section>
   </main>
   <script>
     (() => {
@@ -199,7 +242,10 @@
         name: row.querySelector(".team-name").textContent,
         total: Number(row.cells[1].textContent),
         weeks: Array.from(row.cells).slice(2).map(cell =>
-          Array.from(cell.querySelectorAll("li"), player => player.textContent)
+          Array.from(cell.querySelectorAll("li"), player => ({
+            name: player.dataset.player || player.textContent,
+            missing: player.classList.contains("video-missing"),
+          }))
         ),
       }));
       if (!weeks.length || !teams.length) return;
@@ -230,14 +276,16 @@
 
       function showResults(cards, title) {
         summary.textContent = title;
-        results.replaceChildren(...cards.map(({ heading, players }) => {
+        results.replaceChildren(...cards.map(({ heading, players, missing }) => {
           const card = document.createElement("li");
           const label = document.createElement("strong");
           label.textContent = heading;
+          if (missing) label.className = "video-missing";
           card.append(label);
-          for (const player of players.length ? players : ["No donuts"]) {
+          for (const player of players.length ? players : [{ name: "No donuts", missing: false }]) {
             const name = document.createElement("span");
-            name.textContent = player;
+            name.textContent = player.name;
+            if (player.missing) name.className = "video-missing";
             if (!players.length) name.className = "empty-week";
             card.append(name);
           }
@@ -259,13 +307,21 @@
           next.disabled = week === weeks.length - 1;
           const cards = teams
             .filter(team => team.weeks[week].length)
-            .map(team => ({ heading: team.name, players: team.weeks[week] }));
+            .map(team => ({
+              heading: team.name,
+              players: team.weeks[week],
+              missing: team.weeks[week].some(player => player.missing),
+            }));
           const count = cards.reduce((total, card) => total + card.players.length, 0);
           showResults(cards, weeks[week] + " · " + countLabel(count));
         } else if (mode === "team") {
           const team = teams[teamSelect.selectedIndex];
           const cards = weeks
-            .map((week, index) => ({ heading: week, players: team.weeks[index] }))
+            .map((week, index) => ({
+              heading: week,
+              players: team.weeks[index],
+              missing: team.weeks[index].some(player => player.missing),
+            }))
             .reverse();
           showResults(cards, team.name + " · " + countLabel(team.total));
         }

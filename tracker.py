@@ -350,11 +350,78 @@ def render_podium(standings):
     return "\n".join(podium)
 
 
+def load_video_submissions():
+    path = ROOT / "video_submissions.json"
+    if not path.exists():
+        return {"missing": [], "links": [], "special": []}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def render_video_log(weeks, standings, config):
+    missing = {(item["team"], item["player"]) for item in config.get("missing", [])}
+    links = {(item["team"], item["player"]): item["url"] for item in config.get("links", [])}
+    collection = config.get("collection_url", "")
+    entries = []
+    for _, team, _, weekly in standings:
+        for week, players in zip(weeks, weekly):
+            for player in players:
+                entries.append((week, team, player, (team, player) in missing, False))
+    for item in config.get("special", []):
+        entries.append((item["week"], item["team"], item["player"], False, True))
+        links[item["team"], item["player"]] = item["url"]
+
+    cards = []
+    for week, team, player, is_missing, is_special in sorted(
+        entries, key=lambda item: (-item[0], item[1].casefold(), item[2].casefold())
+    ):
+        classes = ["video-card"]
+        if is_missing:
+            classes.append("video-missing-card")
+        if is_special:
+            classes.append("video-special-card")
+        if is_missing:
+            action = '<span class="video-status video-status-missing">Missing</span>'
+        else:
+            url = links.get((team, player), collection)
+            action = (
+                f'<a class="video-status" href="{html.escape(url, quote=True)}" '
+                'target="_blank" rel="noopener">Watch</a>'
+            ) if url else '<span class="video-status">Submitted</span>'
+        cards.append(
+            f'<li class="{" ".join(classes)}">'
+            f'<span class="video-week">Week {week}</span>'
+            f'<strong>{html.escape(player)}</strong>'
+            f'<span class="video-team">{html.escape(team)}</span>{action}</li>'
+        )
+
+    missing_count = sum(is_missing for _, _, _, is_missing, _ in entries)
+    submitted_count = len(entries) - missing_count
+    metrics = (
+        f'<div><strong>{submitted_count}</strong><span>Submitted</span></div>'
+        f'<div class="video-missing-metric"><strong>{missing_count}</strong><span>Missing</span></div>'
+    )
+    collection_link = (
+        f'<a class="collection-link" href="{html.escape(collection, quote=True)}" '
+        'target="_blank" rel="noopener">All videos</a>'
+    ) if collection else ""
+    return metrics, "".join(cards), collection_link, missing
+
+
 def render_page(weeks, standings, total):
     escape = html.escape
+    video_config = load_video_submissions()
+    video_metrics, video_log, video_collection, missing_videos = render_video_log(
+        weeks, standings, video_config
+    )
+    overdue_teams = {team for team, _ in missing_videos}
     table_rows = []
     for rank, team, count, weekly in standings:
-        leader = ' class="leader"' if rank == 1 and count else ""
+        row_classes = []
+        if rank == 1 and count:
+            row_classes.append("leader")
+        if team in overdue_teams:
+            row_classes.append("video-overdue")
+        row_class = f' class="{" ".join(row_classes)}"' if row_classes else ""
         cells = [
             f'<th scope="row"><span class="rank" aria-label="Rank {rank}">{rank:02d}</span> '
             f'<span class="team-name">{escape(team)}</span></th>',
@@ -362,11 +429,21 @@ def render_page(weeks, standings, total):
         ]
         for players in weekly:
             if players:
-                names = "".join(f"<li>{escape(name)}</li>" for name in players)
+                player_items = []
+                for name in players:
+                    missing_attributes = (
+                        ' class="video-missing" title="Video missing"'
+                        if (team, name) in missing_videos else ""
+                    )
+                    player_items.append(
+                        f'<li data-player="{escape(name, quote=True)}"{missing_attributes}>'
+                        f'{escape(name)}</li>'
+                    )
+                names = "".join(player_items)
                 cells.append(f'<td class="has-donut"><ul>{names}</ul></td>')
             else:
                 cells.append('<td class="no-donut">—</td>')
-        table_rows.append(f"<tr{leader}>" + "".join(cells) + "</tr>")
+        table_rows.append(f"<tr{row_class}>" + "".join(cells) + "</tr>")
 
     template = Template((ROOT / "leaderboard.html.template").read_text(encoding="utf-8"))
     podium = render_podium(standings)
@@ -379,6 +456,9 @@ def render_page(weeks, standings, total):
         podium_hidden="" if podium else " hidden",
         week_headers="".join(f'<th scope="col">Week {week}</th>' for week in weeks),
         leaderboard="\n".join(table_rows),
+        video_metrics=video_metrics,
+        video_log=video_log,
+        video_collection=video_collection,
     )
 
 
