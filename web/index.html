@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="The CTESPN Dynasty fantasy football donut standings.">
   <meta name="theme-color" content="#151219">
   <title>CTESPN Dynasty Donut Tracker</title>
   <style>
@@ -29,34 +28,59 @@
     .hero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 2.5rem 0 2.75rem; }
     .kicker { color: var(--accent); font: 700 .78rem/1.4 ui-monospace, monospace; letter-spacing: .085em; text-transform: uppercase; }
     h1 { font-size: clamp(2.55rem, 7vw, 5rem); line-height: 1; letter-spacing: -.065em; margin: .45rem 0 .75rem; }
-    .intro { max-width: 38rem; color: var(--muted); }
     .donut { flex: 0 0 auto; width: clamp(4.5rem, 17vw, 9rem); height: auto; margin-right: .75rem; transform: rotate(-12deg); }
     main { padding: 1.5rem 0 3rem; }
     .metrics { display: flex; flex-wrap: wrap; gap: .65rem; margin-bottom: 1.5rem; }
     .metrics > div { display: flex; align-items: baseline; gap: .6rem; padding: .5rem .85rem; border: 1px solid var(--line); border-radius: .65rem; background: var(--surface); }
     .metrics strong { font-size: 1.35rem; color: var(--accent); font-variant-numeric: tabular-nums; }
-    .metrics span, .hint { color: var(--muted); font-size: .88rem; }
+    .metrics span { color: var(--muted); font-size: .88rem; }
     h2 { font-size: 1.55rem; letter-spacing: -.03em; }
-    .hint { margin: .2rem 0 .85rem; }
     [hidden] { display: none !important; }
-    .podium { margin-bottom: 1.75rem; }
-    .podium-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: .45rem; width: min(100%, 34rem); margin-top: .5rem; }
+    .podium {
+      margin-bottom: 1.75rem;
+      padding: .95rem clamp(.55rem, 3vw, 2rem) 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: .9rem;
+      background: radial-gradient(ellipse at 50% 40%, #402b2b 0%, #241d29 48%, #1c1721 82%);
+    }
+    .podium h2 { color: var(--accent); font: 750 .8rem ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; }
+    .podium-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: end;
+      gap: clamp(.25rem, 1vw, .7rem);
+      width: min(100%, 36rem);
+      margin: 0 auto;
+      padding-bottom: .35rem;
+      border-bottom: 2px solid #58404b;
+    }
     .podium-place { grid-row: 1; min-width: 0; text-align: center; }
-    .place-1 { grid-column: 2; }
-    .place-2 { grid-column: 1; }
-    .place-3 { grid-column: 3; }
-    .podium-name, .podium-tie { margin: 0 0 .4rem; font-size: .85rem; font-weight: 700; overflow-wrap: anywhere; }
-    .podium-tie summary { padding: .35rem .15rem; cursor: pointer; }
+    .place-1 { grid-column: 2; --medal: #ffdf9b; --metal-top: #694923; --metal-base: #2b1d18; --medal-edge: #a77537; --step-height: 5.55rem; }
+    .place-2 { grid-column: 1; --medal: #e8e2ff; --metal-top: #4c4561; --metal-base: #272235; --medal-edge: #746989; --step-height: 4.65rem; }
+    .place-3 { grid-column: 3; --medal: #ffceb8; --metal-top: #604039; --metal-base: #302027; --medal-edge: #8e6257; --step-height: 3.95rem; }
+    .podium-name, .podium-tie { margin: 0 0 .45rem; font-size: clamp(.76rem, 2.3vw, .95rem); font-weight: 750; overflow-wrap: anywhere; }
+    .place-1 .podium-name { color: var(--medal); }
+    .podium-tie summary { min-height: 2rem; padding: .4rem .1rem; cursor: pointer; }
     .podium-tie ul { padding: 0; margin: .25rem 0 .55rem; list-style: none; font-weight: 400; }
     .podium-tie li + li { margin-top: .3rem; }
-    .podium-step { display: flex; flex-direction: column; justify-content: center; gap: .05rem; min-height: 3rem; padding: .25rem; border: 1px solid var(--line); border-radius: .55rem .55rem .2rem .2rem; background: var(--surface-raised); }
-    .podium-step strong { font: 800 1.05rem ui-monospace, monospace; }
-    .podium-step span { color: var(--muted); font-size: .75rem; }
-    .place-1 .podium-step { min-height: 4.1rem; border-color: #826134; background: #382c20; color: #ffda91; }
-    .place-1 .podium-step span { color: #f3d5a5; }
-    .place-2 .podium-step { min-height: 3.5rem; color: #e1dbe9; }
-    .place-3 .podium-step { color: #efb5a0; }
-    .trophy { display: block; width: 1.6rem; height: 1.6rem; margin: 0 auto .25rem; color: #ffda91; }
+    .podium-step {
+      display: grid;
+      align-content: center;
+      gap: .12rem;
+      min-height: var(--step-height);
+      padding: .35rem .2rem;
+      border: 1px solid var(--medal-edge);
+      border-radius: .52rem .52rem .15rem .15rem;
+      background:
+        linear-gradient(105deg, transparent 58%, #ffffff09 58%, #ffffff09 71%, transparent 71%),
+        linear-gradient(var(--metal-top), var(--metal-base));
+      box-shadow: inset 0 3px #ffffff18, inset 0 -4px #0000003d, 0 6px 12px #100c13;
+      color: var(--medal);
+    }
+    .podium-step strong { font: 850 clamp(1.25rem, 4vw, 2rem)/1 ui-monospace, monospace; }
+    .podium-step span { color: var(--medal); font-size: .72rem; font-weight: 650; }
+    .trophy { display: block; width: clamp(3.1rem, 12vw, 4.6rem); height: auto; margin: 0 auto .2rem; filter: drop-shadow(0 0 .7rem #edaa4d60); }
+    #grid-view { margin-top: .65rem; }
     .view-controls { display: inline-flex; gap: .25rem; margin: .65rem 0; padding: .25rem; border: 1px solid var(--line); border-radius: .65rem; background: var(--surface); }
     .view-controls button, .week-step, .browse select {
       min-height: 2.75rem;
@@ -116,7 +140,6 @@
         <div>
           <p class="kicker">2026 season · Through Week 8</p>
           <h1>Donut Tracker</h1>
-          <p class="intro">A donut goes to a final-lineup starter who scored 0.00 and either played or had an NFL bye. Players subbed out or lost to a first-half injury are excluded.</p>
         </div>
         <svg class="donut" viewBox="0 0 160 160" aria-hidden="true">
           <circle cx="80" cy="80" r="51" fill="none" stroke="#d58d54" stroke-width="42"/>
@@ -133,7 +156,7 @@
     </section>
     <section class="podium" aria-labelledby="podium-title">
       <h2 id="podium-title">Top 3</h2>
-      <div class="podium-steps"><div class="podium-place place-1"><svg class="trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v6a5 5 0 0 1-10 0V4Zm0 2H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4M12 15v5m-4 0h8"/></svg><p class="podium-name">White Bower(s)</p><div class="podium-step"><strong>1st</strong><span>4 donuts</span></div></div>
+      <div class="podium-steps"><div class="podium-place place-1"><svg class="trophy" viewBox="0 0 80 80" fill="none" aria-hidden="true"><defs><linearGradient id="cup-gold" x1="24" y1="17" x2="57" y2="66" gradientUnits="userSpaceOnUse"><stop stop-color="#fff2b6"/><stop offset=".5" stop-color="#f4bb56"/><stop offset="1" stop-color="#b57227"/></linearGradient></defs><circle cx="40" cy="40" r="35" fill="#291e19" stroke="#75532d"/><path d="M25 24H16v5c0 8 5 13 13 14m26-19h9v5c0 8-5 13-13 14" stroke="#efb65c" stroke-width="3" stroke-linejoin="round"/><path d="M24 17h32v17c0 9-7 17-16 17s-16-8-16-17V17Zm12 33h8v10h8v7H28v-7h8V50Z" fill="url(#cup-gold)"/><path d="M30 23v10c0 5 2 9 6 12" stroke="#fff5d6" stroke-opacity=".75" stroke-width="2" stroke-linecap="round"/><path d="m13 12 1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5L13 12Zm54 35 1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5 1.5-4Z" fill="#f8c976"/></svg><p class="podium-name">White Bower(s)</p><div class="podium-step"><strong>1st</strong><span>4 donuts</span></div></div>
 <div class="podium-place place-2"><p class="podium-name">Benjamin Jeantanyahu</p><div class="podium-step"><strong>2nd</strong><span>3 donuts</span></div></div>
 <div class="podium-place place-3"><details class="podium-tie"><summary>4 teams tied</summary><ul><li>Aw, Shoughs</li><li>Decatur Staleys</li><li>Naberhood Watch</li><li>Price is Right</li></ul></details><div class="podium-step"><strong>3rd</strong><span>2 donuts</span></div></div></div>
     </section>
@@ -161,7 +184,6 @@
         <ul id="browse-results" class="browse-results" role="list"></ul>
       </div>
       <div id="grid-view">
-        <p class="hint">Each week shows the players who earned a donut for that team. Scroll sideways for more weeks.</p>
         <div class="table-wrap" id="weekly-log" tabindex="0" role="region" aria-labelledby="leaderboard-title">
           <table aria-label="Donuts by fantasy team and week">
             <thead><tr><th scope="col">Fantasy team</th><th scope="col" class="total-heading">Total</th><th scope="col">Week 1</th><th scope="col">Week 2</th><th scope="col">Week 3</th><th scope="col">Week 4</th><th scope="col">Week 5</th><th scope="col">Week 6</th><th scope="col">Week 7</th><th scope="col">Week 8</th></tr></thead>

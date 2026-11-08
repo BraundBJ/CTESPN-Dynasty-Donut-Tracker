@@ -318,10 +318,18 @@ def render(weeks, standings, total):
 def render_podium(standings):
     podium = []
     trophy = (
-        '<svg class="trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
-        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-        '<path d="M7 4h10v6a5 5 0 0 1-10 0V4Zm0 2H4v2a4 4 0 0 0 4 4m9-6h3v2a4 4 0 0 1-4 4'
-        'M12 15v5m-4 0h8"/></svg>'
+        '<svg class="trophy" viewBox="0 0 80 80" fill="none" aria-hidden="true">'
+        '<defs><linearGradient id="cup-gold" x1="24" y1="17" x2="57" y2="66" gradientUnits="userSpaceOnUse">'
+        '<stop stop-color="#fff2b6"/><stop offset=".5" stop-color="#f4bb56"/>'
+        '<stop offset="1" stop-color="#b57227"/></linearGradient></defs>'
+        '<circle cx="40" cy="40" r="35" fill="#291e19" stroke="#75532d"/>'
+        '<path d="M25 24H16v5c0 8 5 13 13 14m26-19h9v5c0 8-5 13-13 14" '
+        'stroke="#efb65c" stroke-width="3" stroke-linejoin="round"/>'
+        '<path d="M24 17h32v17c0 9-7 17-16 17s-16-8-16-17V17Zm12 33h8v10h8v7H28v-7h8V50Z" '
+        'fill="url(#cup-gold)"/>'
+        '<path d="M30 23v10c0 5 2 9 6 12" stroke="#fff5d6" stroke-opacity=".75" stroke-width="2" stroke-linecap="round"/>'
+        '<path d="m13 12 1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5L13 12Zm54 35 1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5 1.5-4Z" '
+        'fill="#f8c976"/></svg>'
     )
     for place, label in ((1, "1st"), (2, "2nd"), (3, "3rd")):
         teams = [(name, count) for rank, name, count, _ in standings if rank == place and count]
