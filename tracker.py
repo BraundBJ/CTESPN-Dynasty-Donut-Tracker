@@ -85,11 +85,48 @@ def load_matchups(league, teams, snapshot):
         if sorted(row["roster_id"] for row in rows) != sorted(teams):
             raise ValueError(f"Incomplete Sleeper matchups for Week {week}")
         matchups[week] = rows
+    teams_by_week = {
+        week: {BOOK_TEAMS.get(game[field], game[field]) for game in schedule for field in ("home_team", "away_team")}
+        for week, schedule in games.items()
+    }
+    nfl_teams = set().union(*teams_by_week.values())
+    bye_teams = {week: nfl_teams - teams_by_week[week] for week in matchups if teams_by_week[week] != nfl_teams}
     return matchups, {
         game["game_id"]: game
         for week in matchups
         for game in games[week]
-    }
+    }, bye_teams
+
+
+def load_bye_players(bye_teams, players, snapshot):
+    if not bye_teams:
+        return set()
+    history = defaultdict(lambda: defaultdict(set))
+    for row in nfl_csv(f"weekly_rosters/roster_weekly_{SEASON}.csv", "weekly_roster.csv", snapshot):
+        if row["game_type"] != "REG" or not row["sleeper_id"] or not row["week"]:
+            continue
+        team = row["team"] if row["status"] in {"ACT", "INA", "RES", "DEV", "EXE"} else None
+        history[row["sleeper_id"]][int(row["week"])].add(BOOK_TEAMS.get(team, team))
+
+    bye_players = set()
+    for player_id, roster in history.items():
+        for week, byes in bye_teams.items():
+            teams = roster.get(week)
+            if teams is None:
+                # Bye teams can be missing from weekly rosters. Use the
+                # adjacent records only when they agree on the player's team.
+                previous = max((number for number in roster if number < week), default=None)
+                if previous is None:
+                    continue
+                following = min((number for number in roster if number > week), default=None)
+                current = players.get(player_id, {}).get("team")
+                next_teams = roster[following] if following else {BOOK_TEAMS.get(current, current)}
+                if roster[previous] != next_teams:
+                    continue
+                teams = next_teams
+            if len(teams) == 1 and teams <= byes:
+                bye_players.add((week, player_id))
+    return bye_players
 
 
 def load_appearances(games, snapshot):
@@ -170,7 +207,7 @@ def injury_ended_game(events, team, identity):
     return out_before_second_half
 
 
-def counts_as_donut(week, player_id, player, data, early_injuries, snapshot):
+def counts_as_donut(week, player_id, player, data, early_injuries, bye_players, snapshot):
     if player.get("position") == "DEF":
         return False
     identities, snaps, played, later, books = data
@@ -179,7 +216,7 @@ def counts_as_donut(week, player_id, player, data, early_injuries, snapshot):
     snap_games = snaps.get((week, identity.get("pfr_id")), {})
     games_played = snap_games.keys() | played.get(player_key, set())
     if not games_played:
-        return False
+        return (week, player_id) in bye_players
     if later.get(player_key):
         return True
     if player_id in early_injuries.get(str(week), ()):
@@ -206,11 +243,12 @@ def audit(snapshot):
         teams[roster_id] = metadata.get("team_name") or f"Team {roster_id}"
     if len(teams) != league["total_rosters"]:
         raise ValueError("Sleeper roster data is incomplete")
-    matchups, games = load_matchups(league, teams, snapshot)
+    matchups, games, bye_teams = load_matchups(league, teams, snapshot)
     if not matchups:
         return teams, {}, []
     appearances = load_appearances(games, snapshot)
     players = sleeper("players/nfl", snapshot)
+    bye_players = load_bye_players(bye_teams, players, snapshot)
     early_injuries = json.loads((ROOT / "early_injuries.json").read_text(encoding="utf-8"))
     entries = []
     for week, rows in matchups.items():
@@ -231,7 +269,7 @@ def audit(snapshot):
                 seen.add(player_id)
                 player = players.get(player_id, {})
                 name = player.get("full_name") or player.get("last_name") or f"Player {player_id}"
-                if counts_as_donut(week, player_id, player, appearances, early_injuries, snapshot):
+                if counts_as_donut(week, player_id, player, appearances, early_injuries, bye_players, snapshot):
                     entries.append((week, roster_id, name))
     return teams, matchups, entries
 
@@ -283,7 +321,8 @@ def render_page(weeks, standings, total):
     for rank, team, count, weekly in standings:
         leader = ' class="leader"' if rank == 1 and count else ""
         cells = [
-            f'<th scope="row"><span class="rank" aria-label="Rank {rank}">{rank:02d}</span> {escape(team)}</th>',
+            f'<th scope="row"><span class="rank" aria-label="Rank {rank}">{rank:02d}</span> '
+            f'<span class="team-name">{escape(team)}</span></th>',
             f'<td class="score">{count}</td>',
         ]
         for players in weekly:

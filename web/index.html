@@ -38,6 +38,31 @@
     .metrics span, .hint { color: var(--muted); font-size: .88rem; }
     h2 { font-size: 1.55rem; letter-spacing: -.03em; }
     .hint { margin: .2rem 0 .85rem; }
+    [hidden] { display: none !important; }
+    .view-controls { display: inline-flex; gap: .25rem; margin: .65rem 0; padding: .25rem; border: 1px solid var(--line); border-radius: .65rem; background: var(--surface); }
+    .view-controls button, .week-step, .browse select {
+      min-height: 2.75rem;
+      border: 1px solid var(--line);
+      border-radius: .45rem;
+      background: var(--surface-raised);
+      color: var(--ink);
+      font: inherit;
+    }
+    .view-controls button, .week-step { padding: .45rem .75rem; cursor: pointer; }
+    .view-controls button { border-color: transparent; background: transparent; font-weight: 700; }
+    .view-controls button[aria-pressed="true"] { background: var(--accent); color: var(--canvas); }
+    .browse { max-width: 34rem; margin-top: .35rem; }
+    .browse label { display: block; margin-bottom: .25rem; color: var(--muted); font-size: .88rem; }
+    .picker-row { display: flex; gap: .4rem; }
+    .browse select { flex: 1; width: 100%; min-width: 0; padding: .4rem .65rem; }
+    .week-step { min-width: 2.75rem; }
+    .week-step:disabled { opacity: .42; cursor: default; }
+    .browse-summary { margin: .8rem 0 .45rem; color: var(--muted); font-size: .88rem; overflow-wrap: anywhere; }
+    .browse-results { display: grid; gap: .45rem; margin: 0; padding: 0; list-style: none; }
+    .browse-results > li { padding: .65rem .8rem; border: 1px solid var(--line); border-radius: .55rem; background: var(--surface); overflow-wrap: anywhere; }
+    .browse-results strong { display: block; margin-bottom: .15rem; font-size: .9rem; color: var(--accent); }
+    .browse-results span { display: block; }
+    .browse-results .empty-week { color: var(--muted); }
     .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: .8rem; background: var(--surface); }
     table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .875rem; }
     th, td { padding: .65rem .75rem; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); text-align: left; vertical-align: middle; }
@@ -73,7 +98,7 @@
         <div>
           <p class="kicker">2026 season · Through Week 8</p>
           <h1>Donut Tracker</h1>
-          <p class="intro">A donut goes to a final-lineup starter who played and scored 0.00 points. Players subbed out or lost to a first-half injury are excluded.</p>
+          <p class="intro">A donut goes to a final-lineup starter who scored 0.00 and either played or had an NFL bye. Players subbed out or lost to a first-half injury are excluded.</p>
         </div>
         <svg class="donut" viewBox="0 0 160 160" aria-hidden="true">
           <circle cx="80" cy="80" r="51" fill="none" stroke="#d58d54" stroke-width="42"/>
@@ -85,30 +110,161 @@
   </header>
   <main class="wrap">
     <section class="metrics" aria-label="Season totals">
-      <div><strong>17</strong><span>Donuts</span></div>
+      <div><strong>18</strong><span>Donuts</span></div>
       <div><strong>12</strong><span>Fantasy teams</span></div>
     </section>
     <section id="leaderboard" aria-labelledby="leaderboard-title">
       <h2 id="leaderboard-title">Weekly leaderboard</h2>
-      <p class="hint">Each week shows the players who earned a donut for that team. Scroll sideways for more weeks.</p>
-      <div class="table-wrap" id="weekly-log" tabindex="0" role="region" aria-labelledby="leaderboard-title">
-        <table aria-label="Donuts by fantasy team and week">
-          <thead><tr><th scope="col">Fantasy team</th><th scope="col" class="total-heading">Total</th><th scope="col">Week 1</th><th scope="col">Week 2</th><th scope="col">Week 3</th><th scope="col">Week 4</th><th scope="col">Week 5</th><th scope="col">Week 6</th><th scope="col">Week 7</th><th scope="col">Week 8</th></tr></thead>
-          <tbody><tr class="leader"><th scope="row"><span class="rank" aria-label="Rank 1">01</span> White Bower(s)</th><td class="score">4</td><td class="has-donut"><ul><li>Jordan Addison</li><li>Romeo Doubs</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li>Oronde Gadsden</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Emanuel Wilson</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 2">02</span> Benjamin Jeantanyahu</th><td class="score">3</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Cam Skattebo</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li>Omar Cooper Jr.</li><li>Zay Flowers</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> Aw, Shoughs</th><td class="score">2</td><td class="has-donut"><ul><li>Colston Loveland</li><li>Kyle Pitts Sr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> Naberhood Watch</th><td class="score">2</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Marvin Harrison Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Tre Tucker</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> Price is Right</th><td class="score">2</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Jake Ferguson</li></ul></td><td class="has-donut"><ul><li>Cade Otton</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 6">06</span> Decatur Staleys</th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Juwan Johnson</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 6">06</span> LEASTIMNOTDRINKINGBRIAN</th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Will Reichard</li></ul></td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 6">06</span> Quinshon Judkins Fan Club</th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Kenyon Sadiq</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 6">06</span> The Tetless Offensive</th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Brian Thomas Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> Captain Jahmyrica</th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> Love Air Jordyn</th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
-<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> Steve</th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr></tbody>
-        </table>
+      <div class="view-controls" id="view-controls" role="group" aria-label="Leaderboard view" hidden>
+        <button type="button" data-view="week" aria-pressed="false">By week</button>
+        <button type="button" data-view="team" aria-pressed="false">By team</button>
+        <button type="button" data-view="grid" aria-pressed="true">Full grid</button>
+      </div>
+      <div class="browse" id="browse" hidden>
+        <div id="week-picker">
+          <label for="browse-week">Week</label>
+          <div class="picker-row">
+            <button type="button" class="week-step" id="previous-week" aria-label="Previous week">‹</button>
+            <select id="browse-week"></select>
+            <button type="button" class="week-step" id="next-week" aria-label="Next week">›</button>
+          </div>
+        </div>
+        <div id="team-picker" hidden>
+          <label for="browse-team">Fantasy team</label>
+          <select id="browse-team"></select>
+        </div>
+        <p id="browse-summary" class="browse-summary" role="status"></p>
+        <ul id="browse-results" class="browse-results" role="list"></ul>
+      </div>
+      <div id="grid-view">
+        <p class="hint">Each week shows the players who earned a donut for that team. Scroll sideways for more weeks.</p>
+        <div class="table-wrap" id="weekly-log" tabindex="0" role="region" aria-labelledby="leaderboard-title">
+          <table aria-label="Donuts by fantasy team and week">
+            <thead><tr><th scope="col">Fantasy team</th><th scope="col" class="total-heading">Total</th><th scope="col">Week 1</th><th scope="col">Week 2</th><th scope="col">Week 3</th><th scope="col">Week 4</th><th scope="col">Week 5</th><th scope="col">Week 6</th><th scope="col">Week 7</th><th scope="col">Week 8</th></tr></thead>
+            <tbody><tr class="leader"><th scope="row"><span class="rank" aria-label="Rank 1">01</span> <span class="team-name">White Bower(s)</span></th><td class="score">4</td><td class="has-donut"><ul><li>Jordan Addison</li><li>Romeo Doubs</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li>Oronde Gadsden</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Emanuel Wilson</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 2">02</span> <span class="team-name">Benjamin Jeantanyahu</span></th><td class="score">3</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Cam Skattebo</li></ul></td><td class="no-donut">—</td><td class="has-donut"><ul><li>Omar Cooper Jr.</li><li>Zay Flowers</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Aw, Shoughs</span></th><td class="score">2</td><td class="has-donut"><ul><li>Colston Loveland</li><li>Kyle Pitts Sr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Decatur Staleys</span></th><td class="score">2</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Jake Bates</li><li>Juwan Johnson</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Naberhood Watch</span></th><td class="score">2</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Marvin Harrison Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Tre Tucker</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 3">03</span> <span class="team-name">Price is Right</span></th><td class="score">2</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Jake Ferguson</li></ul></td><td class="has-donut"><ul><li>Cade Otton</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">LEASTIMNOTDRINKINGBRIAN</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Will Reichard</li></ul></td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">Quinshon Judkins Fan Club</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Kenyon Sadiq</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 7">07</span> <span class="team-name">The Tetless Offensive</span></th><td class="score">1</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="has-donut"><ul><li>Brian Thomas Jr.</li></ul></td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> <span class="team-name">Captain Jahmyrica</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> <span class="team-name">Love Air Jordyn</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr>
+<tr><th scope="row"><span class="rank" aria-label="Rank 10">10</span> <span class="team-name">Steve</span></th><td class="score">0</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td><td class="no-donut">—</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </main>
+  <script>
+    (() => {
+      const table = document.querySelector("#weekly-log table");
+      const weeks = Array.from(table.tHead.rows[0].cells).slice(2).map(cell => cell.textContent);
+      const teams = Array.from(table.tBodies[0].rows).map(row => ({
+        name: row.querySelector(".team-name").textContent,
+        total: Number(row.cells[1].textContent),
+        weeks: Array.from(row.cells).slice(2).map(cell =>
+          Array.from(cell.querySelectorAll("li"), player => player.textContent)
+        ),
+      }));
+      if (!weeks.length || !teams.length) return;
+
+      const controls = document.querySelector("#view-controls");
+      const buttons = Array.from(controls.querySelectorAll("button"));
+      const grid = document.querySelector("#grid-view");
+      const browse = document.querySelector("#browse");
+      const weekPicker = document.querySelector("#week-picker");
+      const teamPicker = document.querySelector("#team-picker");
+      const weekSelect = document.querySelector("#browse-week");
+      const teamSelect = document.querySelector("#browse-team");
+      const previous = document.querySelector("#previous-week");
+      const next = document.querySelector("#next-week");
+      const summary = document.querySelector("#browse-summary");
+      const results = document.querySelector("#browse-results");
+      const narrowScreen = window.matchMedia("(max-width: 45rem)");
+      let mode = narrowScreen.matches ? "week" : "grid";
+      let pickedView = false;
+
+      weeks.forEach(week => weekSelect.add(new Option(week)));
+      teams.forEach(team => teamSelect.add(new Option(team.name)));
+      weekSelect.selectedIndex = weeks.length - 1;
+
+      function countLabel(count) {
+        return count + (count === 1 ? " donut" : " donuts");
+      }
+
+      function showResults(cards, title) {
+        summary.textContent = title;
+        results.replaceChildren(...cards.map(({ heading, players }) => {
+          const card = document.createElement("li");
+          const label = document.createElement("strong");
+          label.textContent = heading;
+          card.append(label);
+          for (const player of players.length ? players : ["No donuts"]) {
+            const name = document.createElement("span");
+            name.textContent = player;
+            if (!players.length) name.className = "empty-week";
+            card.append(name);
+          }
+          return card;
+        }));
+      }
+
+      function render() {
+        grid.hidden = mode !== "grid";
+        browse.hidden = mode === "grid";
+        weekPicker.hidden = mode !== "week";
+        teamPicker.hidden = mode !== "team";
+        for (const button of buttons) {
+          button.setAttribute("aria-pressed", String(button.dataset.view === mode));
+        }
+        if (mode === "week") {
+          const week = weekSelect.selectedIndex;
+          previous.disabled = week === 0;
+          next.disabled = week === weeks.length - 1;
+          const cards = teams
+            .filter(team => team.weeks[week].length)
+            .map(team => ({ heading: team.name, players: team.weeks[week] }));
+          const count = cards.reduce((total, card) => total + card.players.length, 0);
+          showResults(cards, weeks[week] + " · " + countLabel(count));
+        } else if (mode === "team") {
+          const team = teams[teamSelect.selectedIndex];
+          const cards = weeks
+            .map((week, index) => ({ heading: week, players: team.weeks[index] }))
+            .reverse();
+          showResults(cards, team.name + " · " + countLabel(team.total));
+        }
+      }
+
+      for (const button of buttons) {
+        button.addEventListener("click", () => {
+          pickedView = true;
+          mode = button.dataset.view;
+          render();
+        });
+      }
+      weekSelect.addEventListener("change", render);
+      teamSelect.addEventListener("change", render);
+      previous.addEventListener("click", () => {
+        weekSelect.selectedIndex -= 1;
+        render();
+        if (previous.disabled) weekSelect.focus();
+      });
+      next.addEventListener("click", () => {
+        weekSelect.selectedIndex += 1;
+        render();
+        if (next.disabled) weekSelect.focus();
+      });
+      narrowScreen.addEventListener("change", event => {
+        if (pickedView) return;
+        mode = event.matches ? "week" : "grid";
+        render();
+      });
+      render();
+      controls.hidden = false;
+    })();
+  </script>
 </body>
 </html>
