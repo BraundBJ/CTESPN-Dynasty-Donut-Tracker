@@ -11,6 +11,7 @@ import time
 from collections import Counter, defaultdict
 from decimal import Decimal
 from pathlib import Path
+from string import Template
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -226,28 +227,35 @@ def cell(value):
     return html.escape(str(value).replace("\n", " ").replace("\r", " "), quote=False).replace("|", "&#124;").replace("[", "&#91;").replace("]", "&#93;")
 
 
-def render(teams, matchups, entries):
+def standings(teams, entries):
     counts = Counter(row[1] for row in entries if row[3] == "Confirmed")
     pending = Counter(row[1] for row in entries if row[3] == "Uncertain")
     team_order = sorted(teams, key=lambda roster: (-counts[roster], teams[roster].casefold(), roster))
-    entries.sort(key=lambda row: (row[0], teams[row[1]].casefold(), row[2]))
+    rows = []
+    for position, roster in enumerate(team_order, 1):
+        if position == 1 or counts[roster] != counts[team_order[position - 2]]:
+            rank = position
+        rows.append((rank, teams[roster], counts[roster], pending[roster]))
+    return rows
+
+
+def render(teams, matchups, entries):
+    ranks = standings(teams, entries)
     last_week = max(matchups, default=0)
     report = [
         "# CTESPN Dynasty Donut Tracker",
         "",
         f"**{SEASON} season · Through Week {last_week}**" if last_week else f"**{SEASON} season · Waiting for Week 1**",
         "",
-        f"**{sum(counts.values())} confirmed starts** · **{sum(pending.values())} to verify**",
+        f"**{sum(row[2] for row in ranks)} confirmed starts** · **{sum(row[3] for row in ranks)} to verify**",
         "",
         "## Leaderboard",
         "",
         "| Rank | Fantasy team | Confirmed starts | To verify |",
         "| ---: | --- | ---: | ---: |",
     ]
-    for position, roster in enumerate(team_order, 1):
-        if position == 1 or counts[roster] != counts[team_order[position - 2]]:
-            rank = position
-        report.append(f"| {rank} | {cell(teams[roster])} | {counts[roster]} | {pending[roster]} |")
+    for rank, team, confirmed, pending in ranks:
+        report.append(f"| {rank} | {cell(team)} | {confirmed} | {pending} |")
     report.extend(["", "## Weekly log", "", "| Week | Confirmed | To verify | Excluded |", "| ---: | ---: | ---: | ---: |"])
     totals = Counter((row[0], row[3]) for row in entries)
     for week in matchups:
@@ -278,11 +286,69 @@ def render(teams, matchups, entries):
     return "\n".join(report)
 
 
+def render_page(teams, matchups, entries):
+    ranks = standings(teams, entries)
+    escape = html.escape
+    leaderboard = []
+    for rank, team, confirmed, pending in ranks:
+        leader = ' class="leader"' if rank == 1 and confirmed else ""
+        leaderboard.append(
+            f'<tr{leader}><td>{rank:02d}</td><th scope="row">{escape(team)}</th>'
+            f'<td class="score">{confirmed}</td><td>{pending}</td></tr>'
+        )
+
+    def evidence_list(rows, empty, show_week=False):
+        if not rows:
+            return f'<p class="empty">{empty}</p>'
+        items = []
+        for week, roster, player, _, detail, source in rows:
+            team = escape(teams[roster])
+            label = f"Week {week} · {team}" if show_week else team
+            link = f' <a href="{escape(source, quote=True)}">Source</a>' if source else ""
+            items.append(
+                f'<li><strong>{escape(player)}</strong><span>{label}</span>'
+                f'<p>{escape(detail)}{link}</p></li>'
+            )
+        return '<ul class="plays">' + "".join(items) + "</ul>"
+
+    last_week = max(matchups, default=0)
+    weekly = []
+    for week in sorted(matchups, reverse=True):
+        rows = [row for row in entries if row[0] == week]
+        confirmed = [row for row in rows if row[3] == "Confirmed"]
+        count = Counter(row[3] for row in rows)
+        expanded = " open" if week == last_week else ""
+        weekly.append(
+            f'<details{expanded}><summary><strong>Week {week}</strong> '
+            f'<span>{count["Confirmed"]} confirmed · {count["Uncertain"]} to verify</span></summary>'
+            f'{evidence_list(confirmed, "No confirmed starts this week.")}</details>'
+        )
+
+    template = Template((ROOT / "web" / "index.html").read_text(encoding="utf-8"))
+    return template.substitute(
+        season=SEASON,
+        coverage=f"Through Week {last_week}" if last_week else "Waiting for Week 1",
+        total=sum(row[2] for row in ranks),
+        pending=sum(row[3] for row in ranks),
+        teams=len(teams),
+        leaderboard="\n".join(leaderboard),
+        weekly="\n".join(weekly) or '<p class="empty">No completed weeks yet.</p>',
+        uncertain=evidence_list([row for row in entries if row[3] == "Uncertain"], "No cases to verify.", True),
+        excluded=evidence_list([row for row in entries if row[3] == "Excluded"], "No exclusions.", True),
+    )
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--snapshot", type=Path, help="Read downloaded input files from this folder.")
+    parser.add_argument("--site", type=Path, help="Write the standalone web leaderboard to this directory.")
     args = parser.parse_args()
-    report = render(*audit(args.snapshot))
+    teams, matchups, entries = audit(args.snapshot)
+    entries.sort(key=lambda row: (row[0], teams[row[1]].casefold(), row[2]))
+    report = render(teams, matchups, entries)
+    if args.site:
+        args.site.mkdir(parents=True, exist_ok=True)
+        (args.site / "index.html").write_text(render_page(teams, matchups, entries), encoding="utf-8")
     temporary = ROOT / "README.md.tmp"
     temporary.write_text(report, encoding="utf-8")
     temporary.replace(ROOT / "README.md")

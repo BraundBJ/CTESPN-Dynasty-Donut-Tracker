@@ -8,10 +8,8 @@ on:
     paths:
       - 'tracker.py'
       - 'reviews.json'
+      - 'web/index.html'
       - '.github/workflows/refresh.yml'
-
-permissions:
-  contents: write
 
 concurrency:
   group: leaderboard-refresh
@@ -22,10 +20,15 @@ jobs:
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
+      pages: read
+    outputs:
+      publish: ${{ steps.pages.outputs.publish }}
     steps:
       - uses: actions/checkout@v6
       - name: Check completed weeks
-        run: python3 tracker.py
+        run: python3 tracker.py --site "$RUNNER_TEMP/donut-site"
       - name: Save changes
         run: |
           if git diff --quiet -- README.md; then
@@ -36,3 +39,35 @@ jobs:
           git add README.md
           git commit -m "Refresh zero-point starter leaderboard"
           git push
+      - name: Check GitHub Pages source
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if source=$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type'); then
+            if [ "$source" = workflow ]; then
+              echo 'publish=true' >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "::notice::Enable GitHub Actions as the Pages source to publish the site."
+          fi
+      - uses: actions/upload-pages-artifact@v4
+        if: steps.pages.outputs.publish == 'true'
+        with:
+          path: ${{ runner.temp }}/donut-site
+
+  publish:
+    needs: refresh
+    if: needs.refresh.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Publish website
+        id: deploy
+        uses: actions/deploy-pages@v4
